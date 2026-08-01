@@ -21,7 +21,7 @@ Character count: `984`
 - Consumer/integration explorer: N/A — no separate consumer contract is justified.
 - Lifecycle evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/lifecycle.json
 - Browser-wallet evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/browser-wallet.json
-- Successful CI: https://github.com/duclucky/labelscope-market-genlayer/actions/runs/30697185298
+- Successful CI: https://github.com/duclucky/labelscope-market-genlayer/actions/runs/30704502349
 - Demo/frontend: https://labelscope-market-genlayer.vercel.app
 - Frontend proof: the active production deployment restores the OKX account, reads canonical markets/positions, search, detail, and reloadable share links, and finalized active-revision browser create, payable fund, rejected-value credit, and withdrawal transactions. The full resolve/retry/cancel/claim set is preserved on the explicitly superseded revision.
 
