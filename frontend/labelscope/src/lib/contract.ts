@@ -378,11 +378,23 @@ const FUNDING_REASONS: FundingResult['reason'][] = [
 export function fundingResultFromReceipt(receipt: MinimalReceipt): FundingResult | null {
   const leaderValue = receipt.consensus_data?.leader_receipt;
   const leader = Array.isArray(leaderValue) ? leaderValue[0] : leaderValue;
-  if (!leader || typeof leader.result !== 'string') return null;
+  if (!leader) return null;
   try {
-    const bytes = Uint8Array.from(atob(leader.result), (character) => character.charCodeAt(0));
-    if (bytes[0] !== 0) return null;
-    const value = abi.calldata.decode(bytes.slice(1));
+    let value: unknown;
+    if (typeof leader.result === 'string') {
+      const bytes = Uint8Array.from(atob(leader.result), (character) => character.charCodeAt(0));
+      if (bytes[0] !== 0) return null;
+      value = abi.calldata.decode(bytes.slice(1));
+    } else {
+      const normalized = leader.result as {
+        status?: unknown;
+        payload?: { raw?: unknown };
+      };
+      if (normalized?.status !== 'return' || !Array.isArray(normalized?.payload?.raw)) {
+        return null;
+      }
+      value = abi.calldata.decode(Uint8Array.from(normalized.payload.raw));
+    }
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
     const record = (value instanceof Map ? Object.fromEntries(value) : value) as Record<
       string,

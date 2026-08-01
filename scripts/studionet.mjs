@@ -71,11 +71,21 @@ export function executionResultFromReceipt(receipt) {
 export function decodeGenVmReturn(receipt) {
   const leaderValue = receipt?.consensus_data?.leader_receipt;
   const leader = Array.isArray(leaderValue) ? leaderValue[0] : leaderValue;
-  if (!leader || typeof leader.result !== 'string') return null;
+  if (!leader) return null;
   try {
-    const bytes = Uint8Array.from(Buffer.from(leader.result, 'base64'));
-    if (bytes[0] !== 0) return null;
-    return abi.calldata.decode(bytes.subarray(1));
+    if (typeof leader.result === 'string') {
+      const bytes = Uint8Array.from(Buffer.from(leader.result, 'base64'));
+      if (bytes[0] !== 0) return null;
+      return abi.calldata.decode(bytes.subarray(1));
+    }
+    const normalized = leader.result;
+    if (
+      normalized?.status !== 'return' ||
+      !Array.isArray(normalized?.payload?.raw)
+    ) {
+      return null;
+    }
+    return abi.calldata.decode(Uint8Array.from(normalized.payload.raw));
   } catch {
     return null;
   }

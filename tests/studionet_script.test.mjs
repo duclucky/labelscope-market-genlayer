@@ -37,6 +37,26 @@ function receiptWithReturn(value) {
   };
 }
 
+function normalizedReceiptWithReturn(value) {
+  return {
+    statusName: 'FINALIZED',
+    consensus_data: {
+      leader_receipt: [
+        {
+          execution_result: 'SUCCESS',
+          result: {
+            status: 'return',
+            payload: {
+              raw: Array.from(abi.calldata.encode(value)),
+              readable: '',
+            },
+          },
+        },
+      ],
+    },
+  };
+}
+
 test('parseEnvText accepts ordinary dotenv lines without expanding or logging values', () => {
   assert.deepEqual(parseEnvText('A=one\n# comment\nB="two words"\nINVALID\n'), {
     A: 'one',
@@ -245,6 +265,21 @@ test('funding rejection proof requires the bounded full-credit return', () => {
       ),
     /full received value/,
   );
+});
+
+test('funding rejection proof accepts the normalized Studionet result shape', () => {
+  const result = assertFundingRejection(
+    normalizedReceiptWithReturn({
+      accepted: false,
+      reason: 'MARKET_NOT_FOUND',
+      received: '1000',
+      credited_refund: '1000',
+    }),
+    1000n,
+  );
+
+  assert.equal(result.reason, 'MARKET_NOT_FOUND');
+  assert.equal(result.credited_refund, '1000');
 });
 
 test('resumable value stage recovers the latest recorded action instead of resending', () => {

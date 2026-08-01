@@ -110,6 +110,33 @@ describe('transaction finality', () => {
     });
   });
 
+  it('normalizes the decoded result shape returned by Studionet', () => {
+    const value = {
+      accepted: false,
+      reason: 'MARKET_NOT_FOUND',
+      received: '1000',
+      credited_refund: '1000',
+    };
+    const result = fundingResultFromReceipt({
+      consensus_data: {
+        leader_receipt: [
+          {
+            execution_result: 'SUCCESS',
+            result: {
+              status: 'return',
+              payload: {
+                raw: Array.from(abi.calldata.encode(value)),
+                readable: '',
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(result).toEqual(value);
+  });
+
   it('reports a finalized credited rejection as withdrawable instead of funded', async () => {
     const phases: Array<{ status: string; hash?: string; message?: string }> = [];
     const result = returned({
