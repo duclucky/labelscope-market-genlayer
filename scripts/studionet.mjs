@@ -5,7 +5,7 @@ import process from 'node:process';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { createAccount, createClient } from 'genlayer-js';
+import { abi, createAccount, createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { ExecutionResult, TransactionStatus } from 'genlayer-js/types';
 
@@ -18,6 +18,13 @@ const LIFECYCLE_PATH = path.join(EVIDENCE_DIR, 'lifecycle.json');
 const EXPLORER = 'https://explorer-studio.genlayer.com';
 const WEI = 10n ** 18n;
 const STAKE = WEI / 1000n;
+
+export const KNOWN_UNRECOVERABLE_SURPLUS = Object.freeze({
+  address: '0x9F623cd3703c76E123aD561630A6B72364559f5E',
+  balanceWei: '1000000000000000',
+  transactionHash:
+    '0x7de4bed03104b02cae321d7a1e991125448b613eae2e9660cca460d6b68851bb',
+});
 
 export function parseEnvText(text) {
   const result = {};
@@ -61,6 +68,42 @@ export function executionResultFromReceipt(receipt) {
   );
 }
 
+export function decodeGenVmReturn(receipt) {
+  const leaderValue = receipt?.consensus_data?.leader_receipt;
+  const leader = Array.isArray(leaderValue) ? leaderValue[0] : leaderValue;
+  if (!leader || typeof leader.result !== 'string') return null;
+  try {
+    const bytes = Uint8Array.from(Buffer.from(leader.result, 'base64'));
+    if (bytes[0] !== 0) return null;
+    return abi.calldata.decode(bytes.subarray(1));
+  } catch {
+    return null;
+  }
+}
+
+export function assertFundingRejection(receipt, expectedValue) {
+  const decoded = decodeGenVmReturn(receipt);
+  if (!decoded || typeof decoded !== 'object') {
+    throw new Error('Finalized call does not prove the expected funding rejection proof.');
+  }
+  const result = decoded instanceof Map ? Object.fromEntries(decoded) : decoded;
+  if (result.accepted !== false || result.reason !== 'MARKET_NOT_FOUND') {
+    throw new Error('Finalized call does not prove the expected funding rejection proof.');
+  }
+  if (
+    BigInt(result.received) !== BigInt(expectedValue) ||
+    BigInt(result.credited_refund) !== BigInt(expectedValue)
+  ) {
+    throw new Error('Funding rejection did not preserve the full received value as credit.');
+  }
+  return {
+    accepted: false,
+    reason: 'MARKET_NOT_FOUND',
+    received: String(result.received),
+    credited_refund: String(result.credited_refund),
+  };
+}
+
 export function safeReceipt(receipt) {
   return {
     txHash: String(receipt?.hash ?? receipt?.txId ?? receipt?.transaction_hash ?? ''),
@@ -72,6 +115,14 @@ export function safeReceipt(receipt) {
 
 export function selectMarketId(address) {
   return `jideytro-20260722-${address.toLowerCase().slice(2, 10)}`;
+}
+
+export function selectRecordedAction(state, action) {
+  return (
+    [...(state?.transactions ?? [])]
+      .reverse()
+      .find((transaction) => transaction.action === action) ?? null
+  );
 }
 
 export function buildMarketArgs(marketId, closeAt, resolveAt, refundAt) {
@@ -97,13 +148,61 @@ export function buildMarketArgs(marketId, closeAt, resolveAt, refundAt) {
   ];
 }
 
-export function assertArchivable(summary, balance) {
+export function assertArchivable(summary, balance, exception = null, address = '') {
   if (String(summary?.contract_liability ?? '') !== '0') {
     throw new Error('Cannot archive a deployment with nonzero canonical liability.');
   }
-  if (BigInt(balance) !== 0n) {
-    throw new Error('Cannot archive a deployment with nonzero contract balance.');
+  if (BigInt(balance) === 0n) return;
+  if (!exception || address.toLowerCase() !== exception.address.toLowerCase()) {
+    throw new Error(
+      'Cannot archive a nonzero balance outside the documented frozen revision.',
+    );
   }
+  if (BigInt(balance) !== BigInt(exception.balanceWei)) {
+    throw new Error('Contract balance does not match the exact documented surplus.');
+  }
+}
+
+export function buildArchiveDeploymentRecord({
+  deployment,
+  summary,
+  balance,
+  archivedAt,
+  exception = null,
+  failedChildren = [],
+}) {
+  if (exception) {
+    return {
+      ...deployment,
+      status: 'SUPERSEDED_UNRECOVERABLE_TEST_SURPLUS',
+      supersededAt: archivedAt,
+      reason:
+        'A rejected payable call left native value in this frozen revision while GenVM state reverted. Replaced by credit-on-rejection funding safety.',
+      recovery: {
+        canonicalSummary: summary,
+        contractBalanceWei: balance.toString(),
+        remainingAccountingZero: true,
+        invalidPayableTransactionHash: exception.transactionHash,
+        limitation:
+          'The 0.001 GEN test surplus cannot be recovered because this immutable revision has no upgrader or recovery interface.',
+      },
+    };
+  }
+  return {
+    ...deployment,
+    status: 'SUPERSEDED',
+    supersededAt: archivedAt,
+    reason:
+      'The payout used the Intelligent-Contract message interface for an EOA. The parent finalized, but the external child finalized ERROR. Replaced with the current EVM recipient interface.',
+    recovery: {
+      canonicalSummary: summary,
+      contractBalanceWei: balance.toString(),
+      remainingAccountingZero: true,
+      failedChildren,
+      limitation:
+        'The failed child value was not automatically returned. This revision is retained as negative network evidence and must not be reused.',
+    },
+  };
 }
 
 export function assertExternalTransferReceipt(receipt, expected) {
@@ -334,6 +433,35 @@ async function sendAndRecord({ read, client, actor, address, action, functionNam
   return result.receipt;
 }
 
+async function recoverOrSendAndRecord(options) {
+  const existing = selectRecordedAction(options.state, options.action);
+  if (!existing) return sendAndRecord(options);
+  if (!existing.txHash) {
+    throw new Error(`Recorded ${options.action} transaction has no hash.`);
+  }
+  const current = await options.read.getTransaction({ hash: existing.txHash });
+  const status = current.statusName ?? current.status;
+  let result;
+  if (status === TransactionStatus.FINALIZED || current.status === 7) {
+    assertSuccessfulReceipt(current, options.action);
+    result = {
+      acceptedAt: existing.acceptedAt,
+      finalizedAt: existing.finalizedAt ?? nowIso(),
+      receipt: current,
+    };
+  } else {
+    result = await waitFinalized(options.read, existing.txHash, options.action);
+  }
+  Object.assign(existing, {
+    acceptedAt: result.acceptedAt ?? existing.acceptedAt,
+    finalizedAt: result.finalizedAt,
+    status: result.receipt.statusName ?? String(result.receipt.status ?? ''),
+    executionResult: executionResultFromReceipt(result.receipt),
+  });
+  writeJson(LIFECYCLE_PATH, options.state);
+  return result.receipt;
+}
+
 async function reconcileLifecycleTransactions(read, state) {
   let changed = false;
   for (const record of state.transactions ?? []) {
@@ -417,7 +545,7 @@ async function deploy() {
   return complete;
 }
 
-async function archiveSuperseded() {
+async function archiveSuperseded(exception = null) {
   const deployment = readJson(DEPLOYMENT_PATH);
   const lifecycleState = readJson(LIFECYCLE_PATH);
   if (!deployment?.address) throw new Error('No active deployment exists to archive.');
@@ -431,13 +559,15 @@ async function archiveSuperseded() {
     }),
     read.getBalance({ address: deployment.address }),
   ]);
-  assertArchivable(summary, balance);
+  assertArchivable(summary, balance, exception, deployment.address);
 
-  const withdraw = [...(lifecycleState?.transactions ?? [])]
-    .reverse()
-    .find((transaction) => transaction.action === 'withdraw_credit');
   const failedChildren = [];
-  if (withdraw?.txHash) {
+  const withdraw = exception
+    ? null
+    : [...(lifecycleState?.transactions ?? [])]
+        .reverse()
+        .find((transaction) => transaction.action === 'withdraw_credit');
+  if (!exception && withdraw?.txHash) {
     const childIds = await read.getTriggeredTransactionIds({ hash: withdraw.txHash });
     for (const hash of childIds) {
       const transaction = await read.getTransaction({ hash });
@@ -456,21 +586,17 @@ async function archiveSuperseded() {
   const archiveDir = path.join(EVIDENCE_DIR, 'archive', deployment.address.toLowerCase());
   if (fs.existsSync(archiveDir)) throw new Error('Archive directory already exists for this deployment.');
   const archivedAt = nowIso();
-  writeJson(path.join(archiveDir, 'deployment.json'), {
-    ...deployment,
-    status: 'SUPERSEDED',
-    supersededAt: archivedAt,
-    reason:
-      'The payout used the Intelligent-Contract message interface for an EOA. The parent finalized, but the external child finalized ERROR. Replaced with the current EVM recipient interface.',
-    recovery: {
-      canonicalSummary: summary,
-      contractBalanceWei: balance.toString(),
-      remainingAccountingZero: true,
+  writeJson(
+    path.join(archiveDir, 'deployment.json'),
+    buildArchiveDeploymentRecord({
+      deployment,
+      summary,
+      balance,
+      archivedAt,
+      exception,
       failedChildren,
-      limitation:
-        'The failed child value was not automatically returned. This revision is retained as negative network evidence and must not be reused.',
-    },
-  });
+    }),
+  );
   if (lifecycleState) writeJson(path.join(archiveDir, 'lifecycle.json'), lifecycleState);
   fs.unlinkSync(DEPLOYMENT_PATH);
   if (fs.existsSync(LIFECYCLE_PATH)) fs.unlinkSync(LIFECYCLE_PATH);
@@ -523,6 +649,24 @@ async function waitExternalFinalized(read, hash, expected) {
   return receipt;
 }
 
+async function proveExternalTransfer(read, parentHash, expected) {
+  const childIds = await waitForTriggeredTransactions(read, parentHash);
+  const children = [];
+  for (const hash of childIds) {
+    const receipt = await waitExternalFinalized(read, hash, expected);
+    children.push({
+      txHash: hash,
+      explorer: explorerTx(hash),
+      status: receipt.statusName ?? String(receipt.status ?? ''),
+      executionResult: executionResultFromReceipt(receipt),
+      sender: receipt.sender ?? receipt.from_address ?? '',
+      recipient: receipt.recipient ?? receipt.to_address ?? '',
+      valueWei: String(receipt.value ?? ''),
+    });
+  }
+  return children;
+}
+
 async function lifecycle() {
   const deployment = await deploy();
   const { read, primary, integrator, primaryClient, integratorClient } = clients();
@@ -541,6 +685,110 @@ async function lifecycle() {
     throw new Error('Lifecycle evidence belongs to another deployment. Archive it before proceeding.');
   }
   await reconcileLifecycleTransactions(read, state);
+
+  if (!state.refundSafety?.completedAt) {
+    if (!state.refundSafety) {
+      const [creditBefore, contractBalanceBefore] = await Promise.all([
+        read.readContract({
+          address,
+          functionName: 'get_credit',
+          args: [primary.address],
+          jsonSafeReturn: true,
+        }),
+        read.getBalance({ address }),
+      ]);
+      if (BigInt(creditBefore) !== 0n) {
+        throw new Error('Refund-safety smoke requires zero initial primary credit.');
+      }
+      state.refundSafety = {
+        invalidMarketId: `missing-${address.toLowerCase().slice(2, 10)}`,
+        creditBeforeWei: String(creditBefore),
+        contractBalanceBeforeWei: contractBalanceBefore.toString(),
+      };
+      writeJson(LIFECYCLE_PATH, state);
+    }
+
+    const rejectionReceipt = await recoverOrSendAndRecord({
+      read,
+      client: primaryClient,
+      actor: primary,
+      address,
+      action: 'reject_missing_market',
+      functionName: 'fund_position',
+      args: [state.refundSafety.invalidMarketId, 'YES'],
+      value: STAKE,
+      state,
+    });
+    const fundingResult = assertFundingRejection(rejectionReceipt, STAKE);
+    const [creditAfterReject, contractBalanceAfterReject] = await Promise.all([
+      read.readContract({
+        address,
+        functionName: 'get_credit',
+        args: [primary.address],
+        jsonSafeReturn: true,
+      }),
+      read.getBalance({ address }),
+    ]);
+    if (
+      BigInt(creditAfterReject) !==
+      BigInt(state.refundSafety.creditBeforeWei) + STAKE
+    ) {
+      throw new Error('Canonical refund credit does not match rejected value.');
+    }
+    if (
+      contractBalanceAfterReject !==
+      BigInt(state.refundSafety.contractBalanceBeforeWei) + STAKE
+    ) {
+      throw new Error('Contract balance does not include the rejected payable value.');
+    }
+    Object.assign(state.refundSafety, {
+      fundingResult,
+      creditAfterRejectWei: String(creditAfterReject),
+      contractBalanceAfterRejectWei: contractBalanceAfterReject.toString(),
+    });
+    writeJson(LIFECYCLE_PATH, state);
+
+    const withdrawalReceipt = await recoverOrSendAndRecord({
+      read,
+      client: primaryClient,
+      actor: primary,
+      address,
+      action: 'withdraw_rejected_credit',
+      functionName: 'withdraw_credit',
+      args: [STAKE],
+      state,
+    });
+    const parentHash = String(withdrawalReceipt.hash ?? withdrawalReceipt.txId ?? '');
+    if (!parentHash) throw new Error('Rejected-credit withdrawal receipt has no hash.');
+    const children = await proveExternalTransfer(read, parentHash, {
+      sender: address,
+      recipient: primary.address,
+      value: STAKE,
+    });
+    const [creditAfterWithdraw, contractBalanceAfterWithdraw] = await Promise.all([
+      read.readContract({
+        address,
+        functionName: 'get_credit',
+        args: [primary.address],
+        jsonSafeReturn: true,
+      }),
+      read.getBalance({ address }),
+    ]);
+    if (BigInt(creditAfterWithdraw) !== BigInt(state.refundSafety.creditBeforeWei)) {
+      throw new Error('Rejected-value credit was not fully withdrawn.');
+    }
+    if (contractBalanceAfterWithdraw !== BigInt(state.refundSafety.contractBalanceBeforeWei)) {
+      throw new Error('Rejected-value withdrawal left an unexplained contract balance.');
+    }
+    Object.assign(state.refundSafety, {
+      parentTxHash: parentHash,
+      children,
+      creditAfterWithdrawWei: String(creditAfterWithdraw),
+      contractBalanceAfterWithdrawWei: contractBalanceAfterWithdraw.toString(),
+      completedAt: nowIso(),
+    });
+    writeJson(LIFECYCLE_PATH, state);
+  }
 
   let ids = await read.readContract({ address, functionName: 'get_market_ids', args: [], jsonSafeReturn: true });
   if (!Array.isArray(ids)) throw new Error('Canonical market index is not an array.');
@@ -620,25 +868,11 @@ async function lifecycle() {
     const parentHash = state.withdrawal.parentTxHash;
     if (!parentHash) throw new Error('Withdrawal evidence is missing its parent transaction hash.');
     state.withdrawal.parentTxHash = parentHash;
-    const childIds = await waitForTriggeredTransactions(read, parentHash);
-    const children = [];
-    for (const hash of childIds) {
-      const receipt = await waitExternalFinalized(read, hash, {
-        sender: address,
-        recipient: winner.actor.address,
-        value: BigInt(state.withdrawal.creditBeforeWei),
-      });
-      children.push({
-        txHash: hash,
-        explorer: explorerTx(hash),
-        status: receipt.statusName ?? String(receipt.status ?? ''),
-        executionResult: executionResultFromReceipt(receipt),
-        sender: receipt.sender ?? receipt.from_address ?? '',
-        recipient: receipt.recipient ?? receipt.to_address ?? '',
-        valueWei: String(receipt.value ?? ''),
-      });
-    }
-    state.withdrawal.children = children;
+    state.withdrawal.children = await proveExternalTransfer(read, parentHash, {
+      sender: address,
+      recipient: winner.actor.address,
+      value: BigInt(state.withdrawal.creditBeforeWei),
+    });
     writeJson(LIFECYCLE_PATH, state);
   }
   const [creditAfter, balanceAfter, summary, attemptCount] = await Promise.all([
@@ -684,8 +918,13 @@ async function main() {
   if (command === 'inspect') return inspectNetwork();
   if (command === 'deploy') return deploy();
   if (command === 'archive-superseded') return archiveSuperseded();
+  if (command === 'archive-known-surplus') {
+    return archiveSuperseded(KNOWN_UNRECOVERABLE_SURPLUS);
+  }
   if (command === 'lifecycle' || command === 'all') return lifecycle();
-  throw new Error('Usage: node scripts/studionet.mjs [inspect|deploy|archive-superseded|lifecycle|all]');
+  throw new Error(
+    'Usage: node scripts/studionet.mjs [inspect|deploy|archive-superseded|archive-known-surplus|lifecycle|all]',
+  );
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === SCRIPT_PATH) {

@@ -13,6 +13,7 @@
     "studionet:inspect": "node scripts/studionet.mjs inspect",
     "studionet:deploy": "node scripts/studionet.mjs deploy",
     "studionet:archive": "node scripts/studionet.mjs archive-superseded",
+    "studionet:archive-known-surplus": "node scripts/studionet.mjs archive-known-surplus",
     "studionet:lifecycle": "node scripts/studionet.mjs lifecycle",
     "test:frontend": "npm --workspace frontend/labelscope run test",
     "build:frontend": "npm --workspace frontend/labelscope run build",
