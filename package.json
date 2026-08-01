@@ -1,0 +1,23 @@
+{
+  "name": "labelscope-market",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": ["frontend/labelscope"],
+  "scripts": {
+    "dev": "npm --workspace frontend/labelscope run dev",
+    "lint:contract": "powershell -ExecutionPolicy Bypass -File scripts/check.ps1 -Only lint",
+    "test:direct": "powershell -ExecutionPolicy Bypass -File scripts/check.ps1 -Only test",
+    "test:deployment": ".venv\\Scripts\\python.exe -m pytest tests/test_deployment_receipts.py -v && node --test tests/studionet_script.test.mjs",
+    "studionet:inspect": "node scripts/studionet.mjs inspect",
+    "studionet:deploy": "node scripts/studionet.mjs deploy",
+    "studionet:lifecycle": "node scripts/studionet.mjs lifecycle",
+    "test:frontend": "npm --workspace frontend/labelscope run test",
+    "build:frontend": "npm --workspace frontend/labelscope run build",
+    "check": "powershell -ExecutionPolicy Bypass -File scripts/check.ps1"
+  },
+  "dependencies": {
+    "genlayer-js": "^1.1.8"
+  }
+}

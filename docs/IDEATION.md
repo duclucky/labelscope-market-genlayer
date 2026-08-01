@@ -97,7 +97,7 @@ An EPA-action-conditioned reserve has a meaningful consequence, but the ECHO web
 
 ## Viability spike
 
-The bounded probe fetched the official FDA notice for zidesamtinib/Jideytro with HTTP 200 and extracted the decision sentence: adults; locally advanced or metastatic; ROS1-positive NSCLC; at least one prior ROS1 TKI. A second probe queried the openFDA label endpoint for Retevmo and returned one current record with an exact effective date, set ID, application numbers, and indication section.
+The bounded probe fetched the official FDA notice for zidesamtinib/Jideytro with HTTP 200 and extracted the decision sentence: adults; locally advanced or metastatic; ROS1-positive NSCLC; at least one prior ROS1 TKI. A second live probe queried the matching Jideytro openFDA label and returned application `NDA220185`, set ID `3760e421-b523-4d9b-e063-6394a90ab94b`, effective time `20260722`, and the same indication scope.
 
 Two independently phrased classification passes over the Jideytro excerpt produced the same critical result for the locked target `adult + locally advanced/metastatic + ROS1-positive NSCLC + prior ROS1 TKI`: all four facets present, `MATCH`, consequence `WIN_YES`. Replacing the prior-therapy facet with `TKI-naive` produced `NO_MATCH`, consequence `WIN_NO`. Free-text reasons differed but the critical fields stayed stable.
 
