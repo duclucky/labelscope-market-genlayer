@@ -10,7 +10,7 @@ import type {
   UserAction,
   UserPosition,
 } from '../types';
-import { ensureStudionet, type EthereumProvider } from './wallet';
+import { ensureStudionet, providerForAction, type EthereumProvider } from './wallet';
 
 export interface CanonicalMarket {
   creator: string;
@@ -512,11 +512,12 @@ export async function writeCanonicalAction(options: {
   reload: () => Promise<unknown>;
 }): Promise<string> {
   if (!contractAddress) throw new Error('Contract address is not configured for this deployment.');
-  await ensureStudionet(options.provider);
+  const actionProvider = providerForAction(options.provider, options.functionName);
+  await ensureStudionet(actionProvider);
   const walletClient = createClient({
     chain: studionet,
     account: options.account,
-    provider: options.provider,
+    provider: actionProvider,
   });
   return submitAndFinalize({
     writeClient: walletClient,

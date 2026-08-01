@@ -6,7 +6,7 @@
   "contractExplorer": "https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E",
   "frontend": {
     "url": "https://labelscope-market-genlayer.vercel.app",
-    "verifiedProductionDeployment": "dpl_CS1RNF2i8CbUo7k3yZBv8H6snCmw"
+    "verifiedProductionDeployment": "dpl_AwFhE68oiqxUCaqmHBFQbQDLfxHg"
   },
   "browserWallet": {
     "provider": "OKX Wallet",
@@ -15,11 +15,11 @@
     "simulated": false
   },
   "activeRevisionProductionSmoke": {
-    "capturedAt": "2026-08-01T11:02:00.000Z",
+    "capturedAt": "2026-08-01T14:43:15.810Z",
     "contractAddress": "0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
     "contractExplorer": "https://explorer-studio.genlayer.com/address/0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
     "frontendUrl": "https://labelscope-market-genlayer.vercel.app",
-    "verifiedProductionDeployment": "dpl_3G3UgZCuZ42eaFcSfwxBPShFcwx7",
+    "verifiedProductionDeployment": "dpl_AwFhE68oiqxUCaqmHBFQbQDLfxHg",
     "marketId": "jideytro-20260722-ab9d047c",
     "verifiedBehaviors": [
       "authorized OKX account restoration on Studionet",
@@ -29,11 +29,29 @@
       "active bundle contains the current contract address and no prior address"
     ],
     "writeRecheck": {
-      "action": "create_market",
-      "attempts": 2,
-      "result": "WALLET_REJECTED_WITHOUT_CONFIRMATION_POPUP",
-      "transactionHashProduced": false,
-      "canonicalMutation": false
+      "initialResult": "OKX_EIP6963_REJECTED_POST_CREATE_WRITES",
+      "rootCause": "The installed OKX version requires its EIP-6963 provider for create_market and window.okxwallet for subsequent contract writes.",
+      "fix": "The frontend selects the OKX action provider by contract method while preserving EIP-6963 for connection, network, and create_market.",
+      "result": "ACTIVE_REVISION_BROWSER_WRITES_FINALIZED"
+    }
+  },
+  "activeRevisionBrowserWrites": {
+    "capturedAt": "2026-08-01T14:43:15.810Z",
+    "contractAddress": "0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
+    "marketId": "okx-router-20260801-2135",
+    "transactions": {
+      "createMarket": "0x22b976cdcf12f5ae89d173365e5b2f555b88a5d929172ddd09a59e5dac89eeda",
+      "fundYes": "0x855ad323cff9bd88a8099ac89dee81e17509c7947beb0280355f7774b989ac05",
+      "withdrawRejectedFundingCredit": "0x5ce5636da21e9a89f44b5e178a35de27b07d70466d3a8d7e44e5771c04e51954"
+    },
+    "canonicalProof": {
+      "fundedMarketYesTotalWei": "1000000000000000",
+      "walletSide": "YES",
+      "walletStakeWei": "1000000000000000",
+      "expiredFundingMarketId": "okx-router-20260801-205633",
+      "expiredFundingTx": "0x481a58229a9229f7d5e6f14046ffdf590ba1fa5d059e4103901c8478212074b7",
+      "creditedRefundWei": "1000000000000000",
+      "walletCreditAfterWithdrawWei": "0"
     }
   },
   "browserWriteRevision": {
@@ -140,6 +158,7 @@
     "wallet restoration and Studionet account display",
     "submitted, accepted, finalized, failed, and canonical refresh states",
     "market creation and payable funding through the injected wallet",
+    "active-revision OKX action-provider routing for create, funding, and credit withdrawal",
     "contextual lock, resolve, retry, cancel, claim, and withdraw actions",
     "canonical positions and withdrawable credit",
     "duplicate-title market identity and exact market-ID search",

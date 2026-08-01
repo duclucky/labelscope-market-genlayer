@@ -64,6 +64,9 @@ The frontend is accepted as the visual foundation. It will not be rebuilt. Integ
 - Browser writes covered create, fund, invalid write rejection, lock, resolve,
   retry, cancel, claim, and withdraw. The UI refreshed canonical state after
   finalization and showed only the actions legal for the current state/account.
+- The active deployment routes OKX `create_market` through its EIP-6963 provider
+  and subsequent writes through `window.okxwallet`; active browser create,
+  payable fund, rejected-value credit, and withdrawal all finalized.
 - A complete browser lifecycle finalized `RESOLVED_YES / MATCH / WIN_YES`, moved
   `0.002 GEN` to contract credit, and finalized the external child to the browser
   wallet. A second lifecycle produced two `UNVERIFIABLE / NO_SETTLEMENT`
@@ -75,7 +78,7 @@ The frontend is accepted as the visual foundation. It will not be rebuilt. Integ
   finality polling; wallet rejection and hosted quota failures use concise
   product messages instead of raw provider/RPC internals.
 
-Final proof: TypeScript passed, 15 focused frontend tests passed, and local plus
+Final proof: TypeScript passed, 23 focused frontend tests passed, and local plus
 Vercel production builds completed. Public browser evidence is stored in
 `docs/evidence/studionet/browser-wallet.json`; script-signed provisioning remains
 clearly labeled separately.

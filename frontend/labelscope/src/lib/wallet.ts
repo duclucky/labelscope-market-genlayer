@@ -2,8 +2,27 @@ import { studionet } from 'genlayer-js/chains';
 
 export interface EthereumProvider {
   request(args: { method: string; params?: unknown[] | object }): Promise<unknown>;
+  actionProvider?(functionName: string): EthereumProvider;
   on?(event: string, listener: (...args: unknown[]) => void): void;
   removeListener?(event: string, listener: (...args: unknown[]) => void): void;
+}
+
+function okxCompatibleProvider(
+  announcedProvider: EthereumProvider,
+  legacyProvider: EthereumProvider,
+): EthereumProvider {
+  return {
+    request: (args) => announcedProvider.request(args),
+    actionProvider: (functionName) =>
+      functionName === 'create_market' ? announcedProvider : legacyProvider,
+  };
+}
+
+export function providerForAction(
+  provider: EthereumProvider,
+  functionName: string,
+): EthereumProvider {
+  return provider.actionProvider?.(functionName) ?? provider;
 }
 
 export interface WalletOption {
@@ -21,6 +40,7 @@ interface Eip6963Announcement {
 declare global {
   interface Window {
     ethereum?: EthereumProvider;
+    okxwallet?: EthereumProvider;
   }
 }
 
@@ -45,7 +65,11 @@ export async function discoverWallets(timeoutMs = 200): Promise<WalletOption[]> 
   if (found.size === 0 && window.ethereum) {
     found.set('injected', { id: 'injected', name: 'Browser wallet', provider: window.ethereum });
   }
-  return [...found.values()];
+  return [...found.values()].map((option) =>
+    /okx/i.test(option.name) && window.okxwallet
+      ? { ...option, provider: okxCompatibleProvider(option.provider, window.okxwallet) }
+      : option,
+  );
 }
 
 export async function restoreAuthorizedAccount(provider: EthereumProvider): Promise<`0x${string}` | ''> {

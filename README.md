@@ -12,10 +12,11 @@ native-GEN credit.
 
 The production app reads canonical Studionet state and signs real writes through
 an injected wallet. The active revision was verified in Chrome for wallet
-restoration, canonical reads, search/filter, market detail, positions, and a
-reloadable shared-market deep link. A prior revision has separate OKX evidence
-for the complete browser-signed action set; no balances, signatures, or finality
-are simulated.
+restoration, canonical reads, search/filter, market detail, positions, a
+reloadable shared-market deep link, market creation, payable funding, rejected
+value credit, and credit withdrawal. A prior revision retains separate evidence
+for the complete browser-signed resolution/recovery action set; no balances,
+signatures, or finality are simulated.
 
 ## Deployed Contract
 
@@ -84,8 +85,8 @@ npm run check
 ```
 
 `npm run check` currently passes GenVM lint/semantic validation, 49 direct
-contract tests, 4 receipt-parser tests, 14 Studionet-script tests, 22 frontend
-tests, TypeScript, and the Vite production build: **89 automated tests, zero
+contract tests, 4 receipt-parser tests, 14 Studionet-script tests, 23 frontend
+tests, TypeScript, and the Vite production build: **90 automated tests, zero
 skip/xfail**.
 
 [GitHub Actions](https://github.com/duclucky/labelscope-market-genlayer/actions/workflows/check.yml)
@@ -128,11 +129,11 @@ configuration, stdout, stderr, and wallet material are never saved.
 - Hosted Studionet is rate-limited. The frontend retries bounded transient
   capacity/network failures and reports quota exhaustion without exposing raw RPC
   details; this does not turn local or cached state into canonical state.
-- During the final active-revision Chrome recheck, OKX restored the authorized
-  account but rejected two create transactions without opening a confirmation
-  popup. No hash or canonical mutation was produced. Active contract writes are
-  therefore evidenced by authorized scripts; the complete browser-signed action
-  set remains evidenced only on the archived prior revision until OKX is rechecked.
+- The installed OKX version exposes two transaction paths: EIP-6963 is required
+  for `create_market`, while subsequent writes require `window.okxwallet`. The
+  frontend routes by action and the active revision now has finalized browser
+  create, payable fund, rejected-value credit, and withdrawal evidence. The prior
+  revision remains the evidence source for the full resolve/retry/cancel/claim set.
 - LabelScope is a narrow forecasting primitive, not medical advice. It supports
   only locked FDA label-scope markets, not arbitrary questions or sources.
 - V1 has retry/refund recovery for unverifiable evidence but no appeal after a

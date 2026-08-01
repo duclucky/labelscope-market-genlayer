@@ -10,9 +10,9 @@ LabelScope Market — Validator-Resolved FDA Label Scope Pools
 
 ## Notes / Description
 
-LabelScope is a fully collateralized FDA label-scope market on GenLayer. Opposed YES/NO participants fund one immutable pool; neither the creator nor frontend can submit the outcome. Validators independently fetch a locked FDA notice and exact openFDA label bound to application, set ID, and effective date. They normalize seven indication facets plus source consistency and compare semantic meaning, not rationale prose. MATCH or NO_MATCH selects the winning side and opens pro-rata native-GEN credit; unavailable or contradictory evidence is non-settling and retryable. Rejected positive funding value becomes withdrawable sender credit instead of trapped surplus. The reusable single contract covers typed creation, funding, resolution, claims, withdrawals, and canonical views. Eighty-nine tests pass. Studionet proves rejection refund safety, opposed funding, MATCH/WIN_YES consensus, two finalized external transfers, and zero final liability. The production frontend reads the deployment.
+LabelScope is a fully collateralized FDA label-scope market on GenLayer. Opposed YES/NO participants fund one immutable pool; neither the creator nor frontend can submit the outcome. Validators independently fetch a locked FDA notice and exact openFDA label bound to application, set ID, and effective date. They normalize seven indication facets plus source consistency and compare semantic meaning, not rationale prose. MATCH or NO_MATCH selects the winning side and opens pro-rata native-GEN credit; unavailable or contradictory evidence is non-settling and retryable. Rejected positive funding value becomes withdrawable sender credit instead of trapped surplus. The reusable single contract covers typed creation, funding, resolution, claims, withdrawals, and canonical views. Ninety tests pass. Studionet proves rejection refund safety, opposed funding, MATCH/WIN_YES consensus, two finalized external transfers, and zero final liability. Active production OKX writes finalized.
 
-Character count: `995`
+Character count: `984`
 
 ## Evidence
 
@@ -23,13 +23,13 @@ Character count: `995`
 - Browser-wallet evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/browser-wallet.json
 - Successful CI: https://github.com/duclucky/labelscope-market-genlayer/actions/runs/30697185298
 - Demo/frontend: https://labelscope-market-genlayer.vercel.app
-- Frontend proof: the active production deployment restores the OKX account and reads canonical markets/positions, search, detail, and reloadable share links from the active contract. The full OKX-signed action set is preserved on the explicitly superseded revision; active-revision writes are script-signed and labeled separately.
+- Frontend proof: the active production deployment restores the OKX account, reads canonical markets/positions, search, detail, and reloadable share links, and finalized active-revision browser create, payable fund, rejected-value credit, and withdrawal transactions. The full resolve/retry/cancel/claim set is preserved on the explicitly superseded revision.
 
 ## Verified facts
 
 - Contracts: 1 — `LabelScopeMarket`
 - Public methods: 15 — 8 view, 7 write
-- Automated tests: 89 passing, zero skip/xfail — 49 direct contract, 4 receipt parser, 14 Studionet script, 22 frontend
+- Automated tests: 90 passing, zero skip/xfail — 49 direct contract, 4 receipt parser, 14 Studionet script, 23 frontend
 - Network: Studionet, chain ID 61999
 - Lifecycle: an invalid 0.001 GEN payable action credited and returned the full amount; two opposed actors then funded 0.001 GEN each; validators finalized `MATCH`, `WIN_YES`; the winner claimed and received 0.002 GEN; credit/liability and contract balance ended at zero.
 
@@ -40,9 +40,9 @@ rate-limited and can temporarily delay reads or finality polling. No mainnet,
 other testnet, adoption, medical, legal, gambling, securities, or
 production-security claim is made. Portal submission confirmation is pending user
 action; Codex did not click the final Submit button.
-The final active-revision Chrome write recheck was rejected by OKX without a
-confirmation popup and produced no hash or canonical mutation, so no successful
-active browser write is claimed.
+The prior revision remains the browser evidence source for resolve, retry,
+cancel, and claim; active-revision browser evidence covers create, payable fund,
+rejected-value credit, and withdrawal.
 
 ## Why this category
 

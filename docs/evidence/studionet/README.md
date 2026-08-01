@@ -23,8 +23,8 @@ proof.
 
 ## Browser-wallet evidence
 
-`browser-wallet.json` records an OKX-injected-wallet session against the former
-production contract. The browser wallet created and funded markets, observed a
+`browser-wallet.json` records OKX-injected-wallet sessions against the active and
+former production contracts. The browser wallet created and funded markets, observed a
 rejected write without canonical mutation, and signed lock, resolve, retry,
 cancel, claim, and withdrawal actions. The main browser lifecycle finalized
 `RESOLVED_YES / MATCH / WIN_YES`; its withdrawal child transferred
@@ -37,12 +37,15 @@ Provisioning actions signed by the authorized scripts are labeled separately;
 they are not represented as browser-wallet proof. The file contains only public
 transaction hashes and allowlisted canonical fields.
 
-The current production deployment `dpl_3G3UgZCuZ42eaFcSfwxBPShFcwx7` was verified
+The current production deployment `dpl_AwFhE68oiqxUCaqmHBFQbQDLfxHg` was verified
 against the active contract for wallet restoration, canonical market/position
-reads, filtering, direct market deep-link reload, and clipboard sharing. Two
-active-revision create attempts were rejected by OKX without a confirmation popup,
-so they produced no transaction hash or canonical mutation and are not claimed as
-successful browser writes.
+reads, filtering, direct market deep-link reload, clipboard sharing, create,
+payable funding, rejected-value credit, and credit withdrawal. The installed OKX
+version requires EIP-6963 for `create_market` and `window.okxwallet` for later
+writes; the frontend now routes those action providers explicitly. Active market
+`okx-router-20260801-2135` canonically holds the browser-funded `1000000000000000`
+wei YES stake, and a separate expired funding attempt was credited and withdrawn
+back to canonical wallet credit `0`.
 
 ## Superseded revision
 
