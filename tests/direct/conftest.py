@@ -2,6 +2,17 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import Path
+
+import pytest
+
+from gltest.direct.loader import deploy_contract
+
+
+# This release contains the exact py-genlayer runner hash pinned by the
+# contract.  Passing it explicitly also avoids gltest 0.29.2 treating a newer
+# release with renamed artifacts as if it still shipped genvm-universal.tar.xz.
+DIRECT_SDK_VERSION = "v0.2.16"
 
 
 def _install_windows_stdin_patch() -> None:
@@ -67,6 +78,31 @@ def _install_windows_stdin_patch() -> None:
 
 
 _install_windows_stdin_patch()
+
+
+@pytest.fixture
+def direct_deploy(direct_vm):
+    """Deploy against the SDK release paired with the contract runner hash."""
+
+    def _deploy(contract_path: str, *args, sdk_version: str = DIRECT_SDK_VERSION, **kwargs):
+        path = Path(contract_path)
+        if not path.is_absolute():
+            if path.exists():
+                path = path.resolve()
+            else:
+                for base in (
+                    Path.cwd(),
+                    Path.cwd() / "contracts",
+                    Path.cwd() / "intelligent-contracts",
+                ):
+                    candidate = base / contract_path
+                    if candidate.exists():
+                        path = candidate.resolve()
+                        break
+
+        return deploy_contract(path, direct_vm, *args, sdk_version=sdk_version, **kwargs)
+
+    return _deploy
 
 
 def to_hex(address) -> str:
