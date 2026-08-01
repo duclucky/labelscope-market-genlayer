@@ -22,8 +22,8 @@ signatures, or finality are simulated.
 
 - Network: GenLayer Studionet, chain ID `61999`
 - Contract: [`0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d`](https://explorer-studio.genlayer.com/address/0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d)
-- Deploy transaction: [`0xf8acc52d936e7db99c7a2a60d2b3734097b4fecea207b56b7723cf9904eb0655`](https://explorer-studio.genlayer.com/transactions/0xf8acc52d936e7db99c7a2a60d2b3734097b4fecea207b56b7723cf9904eb0655)
-- Source commit: `565ad7bb2518647e555e6caee869ac7245ae5fa7`
+- Deploy transaction: [`0xf8acc52d936e7db99c7a2a60d2b3734097b4fecea207b56b7723cf9904eb0655`](https://explorer-studio.genlayer.com/tx/0xf8acc52d936e7db99c7a2a60d2b3734097b4fecea207b56b7723cf9904eb0655)
+- Deployed contract source commit: `565ad7bb2518647e555e6caee869ac7245ae5fa7`
 - Depends/API family: `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`
 
 ## Why GenLayer
@@ -57,10 +57,12 @@ Two public actors each funded `0.001 GEN` on opposite sides of
 `jideytro-20260722-ab9d047c`. The market finalized `RESOLVED_YES` with `MATCH` and
 `WIN_YES`. All required facets matched, combination therapy was `NOT_REQUIRED`,
 and the sources were `CONSISTENT`. The winner claimed `0.002 GEN`; both the parent
-withdrawal and bound external child finalized, credit became `0`, and contract
-liability became `0`. A deliberately invalid payable funding call also finalized
-without trapping value: the full `0.001 GEN` became sender credit and was withdrawn
-through a separately verified external child.
+withdrawal and bound external child finalized. At the recorded lifecycle snapshot,
+credit and contract liability were both `0`. Subsequent browser QA writes are
+recorded separately and do not change that historical lifecycle result. A
+deliberately invalid payable funding call also finalized without trapping value:
+the full `0.001 GEN` became sender credit and was withdrawn through a separately
+verified external child.
 
 - [Active deployment evidence](docs/evidence/studionet/deployment.json)
 - [Consequential lifecycle evidence](docs/evidence/studionet/lifecycle.json)
@@ -77,8 +79,10 @@ to the sender and verifies both rejection and withdrawal.
 
 ## Verification
 
+Prerequisites: Python 3.12 and Node.js 22.
+
 ```powershell
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 npm ci
 npm run check
