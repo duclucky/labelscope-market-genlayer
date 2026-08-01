@@ -6,7 +6,7 @@
 - Project name: `LabelScope Market`
 - Project slug: `labelscope-market`
 - Category: `Projects`
-- Status: `VALIDATED - STUDIONET SCRIPT LIFECYCLE AND PRODUCTION READ VERIFIED; BROWSER WALLET PENDING`
+- Status: `VALIDATED - ACTIVE STUDIONET LIFECYCLE AND PRODUCTION CANONICAL READ VERIFIED; ACTIVE BROWSER WRITE RECHECK PENDING`
 - Repository: `https://github.com/duclucky/labelscope-market-genlayer`
 - Target network: `studionet`
 - Contract count: one (`LabelScopeMarket`)

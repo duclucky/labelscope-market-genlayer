@@ -14,16 +14,48 @@
     "networkConfirmed": "studionet",
     "simulated": false
   },
+  "activeRevisionProductionSmoke": {
+    "capturedAt": "2026-08-01T11:02:00.000Z",
+    "contractAddress": "0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
+    "contractExplorer": "https://explorer-studio.genlayer.com/address/0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
+    "frontendUrl": "https://labelscope-market-genlayer.vercel.app",
+    "verifiedProductionDeployment": "dpl_3G3UgZCuZ42eaFcSfwxBPShFcwx7",
+    "marketId": "jideytro-20260722-ab9d047c",
+    "verifiedBehaviors": [
+      "authorized OKX account restoration on Studionet",
+      "canonical resolved-market discovery, exact-ID search, detail, and position reads",
+      "reloadable market deep link and exact clipboard URL",
+      "truthful empty-action copy for a claimed and withdrawn wallet position",
+      "active bundle contains the current contract address and no prior address"
+    ],
+    "writeRecheck": {
+      "action": "create_market",
+      "attempts": 2,
+      "result": "WALLET_REJECTED_WITHOUT_CONFIRMATION_POPUP",
+      "transactionHashProduced": false,
+      "canonicalMutation": false
+    }
+  },
+  "browserWriteRevision": {
+    "status": "SUPERSEDED_FROZEN",
+    "contractAddress": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
+    "note": "All browser transaction hashes below belong to this prior revision and are not presented as active-revision writes."
+  },
   "creationAndGuardChecks": {
     "marketId": "browser-audit-20260801-0738",
     "createMarket": "0x398e4977aef862141fdb2484fd236bc7a257a8493b61e9eae3bb997e596bf2b9",
     "fundYesHashCaptured": false,
+    "closeMarket": "0x364c59e0d52e08cfc64d7be38d0579456e630686a53612ed823886e4e528d972",
+    "cancelUnresolved": "0xb5218c2fc09726878ca4628bdc5b7e75bb1666acde76688257819b80fa1f566e",
+    "claimRefund": "0x936b92ef1ddf3002251fa97f8f7785ce9245200bc8043764dac66a11619d5984",
     "canonicalAfterFunding": {
-      "status": "OPEN",
+      "status": "CANCELLED_REFUND",
       "yesTotalWei": "1000000000000000",
       "noTotalWei": "0",
       "walletSide": "YES",
-      "walletStakeWei": "1000000000000000"
+      "walletStakeWei": "1000000000000000",
+      "walletPositionClaimed": true,
+      "walletCreditedAmountWei": "1000000000000000"
     }
   },
   "browserFinalizedLifecycle": {
@@ -75,8 +107,34 @@
       "lastVerdict": "UNVERIFIABLE",
       "lastConsequenceClass": "NO_SETTLEMENT",
       "walletPositionClaimed": true,
-      "walletCreditedAmountWei": "1000000000000000"
+      "walletCreditedAmountWei": "1000000000000000",
+      "walletCreditAfterCombinedWithdrawalWei": "0"
     }
+  },
+  "refundCleanupWithdrawal": {
+    "parentTxHash": "0xa49af182651409451fea5e72d4b3977fc0a9e2e13724eda12fc0b5a3ae9100f1",
+    "amountWei": "2000000000000000",
+    "status": "FINALIZED",
+    "canonicalWalletCreditAfterWei": "0",
+    "externalChild": {
+      "txHash": "0x29bd686f10ebcc3ebd78c42a90434050a45aedb36eeee2c5dba2329e55bebb69",
+      "status": "FINALIZED",
+      "sender": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
+      "recipient": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "valueWei": "2000000000000000"
+    },
+    "coversMarketIds": [
+      "browser-audit-20260801-0738",
+      "browser-retry-20260801-0807"
+    ]
+  },
+  "integratorRecovery": {
+    "claimCreditTxHash": "0x3e477f23e2d059df694ea5fc9c509c5260aca19018dc0d7b7abe7cd66e1d815b",
+    "marketId": "browser-retry-20260801-0807",
+    "status": "FINALIZED",
+    "executionResult": "SUCCESS",
+    "creditedAmountWei": "1000000000000000",
+    "withdrawalStatus": "PENDING_HOSTED_STUDIONET_QUOTA_RECOVERY"
   },
   "frontendBehaviorsVerified": [
     "wallet restoration and Studionet account display",

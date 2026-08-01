@@ -11,16 +11,18 @@ native-GEN credit.
 [https://labelscope-market-genlayer.vercel.app](https://labelscope-market-genlayer.vercel.app)
 
 The production app reads canonical Studionet state and signs real writes through
-an injected wallet. An OKX browser session verified submitted, accepted,
-finalized, failed, retry, cancel, claim, withdrawal, and canonical-refresh
-states without simulated balances, signatures, or finality.
+an injected wallet. The active revision was verified in Chrome for wallet
+restoration, canonical reads, search/filter, market detail, positions, and a
+reloadable shared-market deep link. A prior revision has separate OKX evidence
+for the complete browser-signed action set; no balances, signatures, or finality
+are simulated.
 
 ## Deployed Contract
 
 - Network: GenLayer Studionet, chain ID `61999`
-- Contract: [`0x9F623cd3703c76E123aD561630A6B72364559f5E`](https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E)
-- Deploy transaction: [`0xc45f31813f32da6fa5c22aaacb98a873ebb3d8ecb23d0d45b02830e48ec4e808`](https://explorer-studio.genlayer.com/transactions/0xc45f31813f32da6fa5c22aaacb98a873ebb3d8ecb23d0d45b02830e48ec4e808)
-- Source commit: `1f68ed71871d3c1342cb3fb345c2cb8c79e85654`
+- Contract: [`0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d`](https://explorer-studio.genlayer.com/address/0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d)
+- Deploy transaction: [`0xf8acc52d936e7db99c7a2a60d2b3734097b4fecea207b56b7723cf9904eb0655`](https://explorer-studio.genlayer.com/transactions/0xf8acc52d936e7db99c7a2a60d2b3734097b4fecea207b56b7723cf9904eb0655)
+- Source commit: `565ad7bb2518647e555e6caee869ac7245ae5fa7`
 - Depends/API family: `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`
 
 ## Why GenLayer
@@ -51,21 +53,26 @@ claim-to-code matrix are in [docs/README.md](docs/README.md).
 ## Verified Studionet Lifecycle
 
 Two public actors each funded `0.001 GEN` on opposite sides of
-`jideytro-20260722-9f623cd3`. The market finalized `RESOLVED_YES` with `MATCH` and
+`jideytro-20260722-ab9d047c`. The market finalized `RESOLVED_YES` with `MATCH` and
 `WIN_YES`. All required facets matched, combination therapy was `NOT_REQUIRED`,
 and the sources were `CONSISTENT`. The winner claimed `0.002 GEN`; both the parent
-withdrawal and bound external child finalized, the public balance increased by
-exactly `0.002 GEN`, credit became `0`, and contract liability became `0`.
+withdrawal and bound external child finalized, credit became `0`, and contract
+liability became `0`. A deliberately invalid payable funding call also finalized
+without trapping value: the full `0.001 GEN` became sender credit and was withdrawn
+through a separately verified external child.
 
 - [Active deployment evidence](docs/evidence/studionet/deployment.json)
 - [Consequential lifecycle evidence](docs/evidence/studionet/lifecycle.json)
 - [Browser-wallet lifecycle evidence](docs/evidence/studionet/browser-wallet.json)
 - [Evidence guide and transaction index](docs/evidence/studionet/README.md)
+- [Frozen surplus revision](docs/evidence/studionet/archive/0x9f623cd3703c76e123ad561630a6b72364559f5e/deployment.json)
 - [Superseded revision and negative payout evidence](docs/evidence/studionet/archive/0xd36f45d6d878bf1adc2346614919c659c8d08f7f/deployment.json)
 
-The archived revision is intentionally public: its IC-to-EOA child failed, which
-proved that parent finality alone is insufficient. The active revision uses the
-current external EOA interface and verifies child fields plus balance delta.
+The archives are intentionally public. One revision proved that parent finality
+alone is insufficient when its IC-to-EOA child failed. The later frozen revision
+proved a payable-revert surplus that cannot be recovered because no upgrader,
+admin, or sweep path exists. The active revision credits positive rejected value
+to the sender and verifies both rejection and withdrawal.
 
 ## Verification
 
@@ -76,9 +83,9 @@ npm ci
 npm run check
 ```
 
-`npm run check` currently passes GenVM lint/semantic validation, 41 direct
-contract tests, 4 receipt-parser tests, 8 Studionet-script tests, 15 frontend
-tests, TypeScript, and the Vite production build: **68 automated tests, zero
+`npm run check` currently passes GenVM lint/semantic validation, 49 direct
+contract tests, 4 receipt-parser tests, 14 Studionet-script tests, 22 frontend
+tests, TypeScript, and the Vite production build: **89 automated tests, zero
 skip/xfail**.
 
 [GitHub Actions](https://github.com/duclucky/labelscope-market-genlayer/actions/workflows/check.yml)
@@ -121,6 +128,11 @@ configuration, stdout, stderr, and wallet material are never saved.
 - Hosted Studionet is rate-limited. The frontend retries bounded transient
   capacity/network failures and reports quota exhaustion without exposing raw RPC
   details; this does not turn local or cached state into canonical state.
+- During the final active-revision Chrome recheck, OKX restored the authorized
+  account but rejected two create transactions without opening a confirmation
+  popup. No hash or canonical mutation was produced. Active contract writes are
+  therefore evidenced by authorized scripts; the complete browser-signed action
+  set remains evidenced only on the archived prior revision until OKX is rechecked.
 - LabelScope is a narrow forecasting primitive, not medical advice. It supports
   only locked FDA label-scope markets, not arbitrary questions or sources.
 - V1 has retry/refund recovery for unverifiable evidence but no appeal after a

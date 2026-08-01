@@ -10,28 +10,28 @@ LabelScope Market — Validator-Resolved FDA Label Scope Pools
 
 ## Notes / Description
 
-LabelScope is a fully collateralized FDA label-scope market on GenLayer. Opposed YES/NO participants fund one immutable pool; neither the creator nor frontend can submit the outcome. Validators independently fetch a locked FDA approval notice and the exact openFDA label bound to application number, set ID, and effective date. They normalize seven indication facets plus source consistency and compare semantic meaning, not rationale wording. A finalized MATCH or NO_MATCH selects the winning side and opens pro-rata native-GEN credit; unavailable or contradictory evidence is non-settling and retryable. The reusable one-contract interface covers typed market creation, funding, resolution, claims, withdrawals, and canonical views. Sixty-eight automated tests pass. Studionet proves opposed funding, MATCH/WIN_YES consensus, retry/refund recovery, browser-wallet writes, a finalized external transfer, and canonical rereads. The production frontend uses the deployed contract.
+LabelScope is a fully collateralized FDA label-scope market on GenLayer. Opposed YES/NO participants fund one immutable pool; neither the creator nor frontend can submit the outcome. Validators independently fetch a locked FDA notice and exact openFDA label bound to application, set ID, and effective date. They normalize seven indication facets plus source consistency and compare semantic meaning, not rationale prose. MATCH or NO_MATCH selects the winning side and opens pro-rata native-GEN credit; unavailable or contradictory evidence is non-settling and retryable. Rejected positive funding value becomes withdrawable sender credit instead of trapped surplus. The reusable single contract covers typed creation, funding, resolution, claims, withdrawals, and canonical views. Eighty-nine tests pass. Studionet proves rejection refund safety, opposed funding, MATCH/WIN_YES consensus, two finalized external transfers, and zero final liability. The production frontend reads the deployment.
 
-Character count: `979`
+Character count: `995`
 
 ## Evidence
 
 - Repository: https://github.com/duclucky/labelscope-market-genlayer
-- Primary contract explorer: https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E
+- Primary contract explorer: https://explorer-studio.genlayer.com/address/0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d
 - Consumer/integration explorer: N/A — no separate consumer contract is justified.
 - Lifecycle evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/lifecycle.json
 - Browser-wallet evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/browser-wallet.json
-- CI: https://github.com/duclucky/labelscope-market-genlayer/actions/workflows/check.yml
+- Successful CI: pending current-head workflow completion
 - Demo/frontend: https://labelscope-market-genlayer.vercel.app
-- Frontend proof: OKX browser-wallet creation, funding, lock, resolve, retry, cancel, claim, withdrawal, failure handling, and canonical rereads are captured. Script-signed provisioning is labeled separately.
+- Frontend proof: the active production deployment restores the OKX account and reads canonical markets/positions, search, detail, and reloadable share links from the active contract. The full OKX-signed action set is preserved on the explicitly superseded revision; active-revision writes are script-signed and labeled separately.
 
 ## Verified facts
 
 - Contracts: 1 — `LabelScopeMarket`
 - Public methods: 15 — 8 view, 7 write
-- Automated tests: 68 passing, zero skip/xfail — 41 direct contract, 4 receipt parser, 8 Studionet script, 15 frontend
+- Automated tests: 89 passing, zero skip/xfail — 49 direct contract, 4 receipt parser, 14 Studionet script, 22 frontend
 - Network: Studionet, chain ID 61999
-- Lifecycle: two opposed actors funded 0.001 GEN each; validators finalized `MATCH`, `WIN_YES`; winner claimed and received 0.002 GEN; credit/liability ended at zero.
+- Lifecycle: an invalid 0.001 GEN payable action credited and returned the full amount; two opposed actors then funded 0.001 GEN each; validators finalized `MATCH`, `WIN_YES`; the winner claimed and received 0.002 GEN; credit/liability and contract balance ended at zero.
 
 ## Honest limitations / pending
 
@@ -40,6 +40,9 @@ rate-limited and can temporarily delay reads or finality polling. No mainnet,
 other testnet, adoption, medical, legal, gambling, securities, or
 production-security claim is made. Portal submission confirmation is pending user
 action; Codex did not click the final Submit button.
+The final active-revision Chrome write recheck was rejected by OKX without a
+confirmation popup and produced no hash or canonical mutation, so no successful
+active browser write is claimed.
 
 ## Why this category
 
@@ -59,4 +62,4 @@ would omit the product integration being demonstrated.
 
 **Live app:** https://labelscope-market-genlayer.vercel.app
 
-**Contract (studionet):** 0x9F623cd3703c76E123aD561630A6B72364559f5E
+**Contract (studionet):** 0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d

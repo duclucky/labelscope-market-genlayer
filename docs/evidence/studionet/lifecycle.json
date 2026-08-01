@@ -1,111 +1,161 @@
 {
   "network": "studionet",
   "chainId": 61999,
-  "contractAddress": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
-  "contractExplorer": "https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E",
-  "marketId": "jideytro-20260722-9f623cd3",
-  "startedAt": "2026-08-01T06:31:55.293Z",
+  "contractAddress": "0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
+  "contractExplorer": "https://explorer-studio.genlayer.com/address/0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
+  "marketId": "jideytro-20260722-ab9d047c",
+  "startedAt": "2026-08-01T10:29:45.799Z",
   "transactions": [
+    {
+      "action": "reject_missing_market",
+      "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "txHash": "0xe3d7db902977f07cd196ec1b4318fbaacda1bbb1c11e68333d6e45821e6b43bb",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0xe3d7db902977f07cd196ec1b4318fbaacda1bbb1c11e68333d6e45821e6b43bb",
+      "submittedAt": "2026-08-01T10:29:49.575Z",
+      "status": "FINALIZED",
+      "acceptedAt": "2026-08-01T10:29:56.962Z",
+      "finalizedAt": "2026-08-01T10:30:32.406Z",
+      "executionResult": "SUCCESS"
+    },
+    {
+      "action": "withdraw_rejected_credit",
+      "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "txHash": "0x92781d9f253989590d212d5cdeca75d48074d53f0ad62fe79bd9214d15308701",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0x92781d9f253989590d212d5cdeca75d48074d53f0ad62fe79bd9214d15308701",
+      "submittedAt": "2026-08-01T10:34:12.813Z",
+      "status": "7",
+      "acceptedAt": "2026-08-01T10:34:20.240Z",
+      "finalizedAt": "2026-08-01T10:34:50.739Z",
+      "executionResult": "SUCCESS"
+    },
     {
       "action": "create_market",
       "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
-      "txHash": "0xb1ae6323cc5e61822e28f77bfc2d2aba4f9acbd8722e7145842169d00039344c",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0xb1ae6323cc5e61822e28f77bfc2d2aba4f9acbd8722e7145842169d00039344c",
-      "submittedAt": "2026-08-01T06:31:58.744Z",
+      "txHash": "0xbaec305b51f422ed7eac37fa89f7d09ebdbb996b259c62b4a70fea5ec64b96ba",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0xbaec305b51f422ed7eac37fa89f7d09ebdbb996b259c62b4a70fea5ec64b96ba",
+      "submittedAt": "2026-08-01T10:34:56.453Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:32:09.683Z",
-      "finalizedAt": "2026-08-01T06:32:38.524Z",
+      "acceptedAt": "2026-08-01T10:35:07.223Z",
+      "finalizedAt": "2026-08-01T10:35:36.866Z",
       "executionResult": "SUCCESS"
     },
     {
       "action": "fund_yes",
       "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
-      "txHash": "0x01181445f1f86c26f76ec0aec216fc6782b339ad64b4a89f393e6c3f0a08626c",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0x01181445f1f86c26f76ec0aec216fc6782b339ad64b4a89f393e6c3f0a08626c",
-      "submittedAt": "2026-08-01T06:32:42.901Z",
+      "txHash": "0x94488b6a7a69ae82f05592f0e3b799a8dc4993f91058c464b10a3d7972611655",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0x94488b6a7a69ae82f05592f0e3b799a8dc4993f91058c464b10a3d7972611655",
+      "submittedAt": "2026-08-01T10:35:41.784Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:32:50.150Z",
-      "finalizedAt": "2026-08-01T06:33:20.975Z",
+      "acceptedAt": "2026-08-01T10:35:49.290Z",
+      "finalizedAt": "2026-08-01T10:36:17.980Z",
       "executionResult": "SUCCESS"
     },
     {
       "action": "fund_no",
       "actor": "0x45aD397c438397A702B53a7499a78D08961D39Db",
-      "txHash": "0xc20aaeb4a541189dcab4597197345d1feaaab0e034315b1b73a8ad8bf7556d43",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0xc20aaeb4a541189dcab4597197345d1feaaab0e034315b1b73a8ad8bf7556d43",
-      "submittedAt": "2026-08-01T06:33:24.403Z",
+      "txHash": "0xd1d43af127b2e25a798abfaaed3ccb09adf13d85fa3d408859f90899c1333b97",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0xd1d43af127b2e25a798abfaaed3ccb09adf13d85fa3d408859f90899c1333b97",
+      "submittedAt": "2026-08-01T10:36:21.390Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:33:31.751Z",
-      "finalizedAt": "2026-08-01T06:34:00.387Z",
+      "acceptedAt": "2026-08-01T10:36:28.818Z",
+      "finalizedAt": "2026-08-01T10:37:01.602Z",
       "executionResult": "SUCCESS"
     },
     {
       "action": "lock_market",
       "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
-      "txHash": "0x9fe44c149397d7ad2ebe29507b750ba63ca347a01200e87933638f73ea81b2d0",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0x9fe44c149397d7ad2ebe29507b750ba63ca347a01200e87933638f73ea81b2d0",
-      "submittedAt": "2026-08-01T06:40:01.041Z",
+      "txHash": "0x94eb760ad2097c5f6b44f1a3f9c9969d8499e79fe88a7f17e5106cf4eccb46cf",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0x94eb760ad2097c5f6b44f1a3f9c9969d8499e79fe88a7f17e5106cf4eccb46cf",
+      "submittedAt": "2026-08-01T10:42:58.329Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:40:08.389Z",
-      "finalizedAt": "2026-08-01T06:40:40.713Z",
+      "acceptedAt": "2026-08-01T10:43:02.315Z",
+      "finalizedAt": "2026-08-01T10:43:34.584Z",
       "executionResult": "SUCCESS"
     },
     {
       "action": "resolve_market",
       "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
-      "txHash": "0x085f667f5e9d2dfb846e2545388e917434e58cea1ece9dc5ebf630932ea4e371",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0x085f667f5e9d2dfb846e2545388e917434e58cea1ece9dc5ebf630932ea4e371",
-      "submittedAt": "2026-08-01T06:42:01.305Z",
+      "txHash": "0x51b9df0751bfe4a808fdd1c3246638049c919f0591d11846c15e45028a036a78",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0x51b9df0751bfe4a808fdd1c3246638049c919f0591d11846c15e45028a036a78",
+      "submittedAt": "2026-08-01T10:44:58.225Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:42:25.809Z",
-      "finalizedAt": "2026-08-01T06:42:58.591Z",
+      "acceptedAt": "2026-08-01T10:45:19.273Z",
+      "finalizedAt": "2026-08-01T10:45:48.532Z",
       "executionResult": "SUCCESS"
     },
     {
       "action": "claim_credit",
       "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
-      "txHash": "0x0a68b18be3905a112601805ff1c65a77e00af6dbf468c82a9bbca1a33c0a28bc",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0x0a68b18be3905a112601805ff1c65a77e00af6dbf468c82a9bbca1a33c0a28bc",
-      "submittedAt": "2026-08-01T06:43:03.403Z",
+      "txHash": "0x144ce77197f89099ad047c0c83797bc2c6da72ecb7de0ba13d75b8605b4b7bbc",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0x144ce77197f89099ad047c0c83797bc2c6da72ecb7de0ba13d75b8605b4b7bbc",
+      "submittedAt": "2026-08-01T10:45:53.346Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:43:10.711Z",
-      "finalizedAt": "2026-08-01T06:43:39.044Z",
+      "acceptedAt": "2026-08-01T10:45:57.271Z",
+      "finalizedAt": "2026-08-01T10:46:27.150Z",
       "executionResult": "SUCCESS"
     },
     {
       "action": "withdraw_credit",
       "actor": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
-      "txHash": "0xb84f9bf11e4ce186aa46288e7a160f529b487f7e609c798cd452e88db4ebd6ce",
-      "explorer": "https://explorer-studio.genlayer.com/transactions/0xb84f9bf11e4ce186aa46288e7a160f529b487f7e609c798cd452e88db4ebd6ce",
-      "submittedAt": "2026-08-01T06:43:42.890Z",
+      "txHash": "0xb122b1937d31efbefbda0ff851e8d86fa97603bfd9fd16ad301e4f45a07f8e10",
+      "explorer": "https://explorer-studio.genlayer.com/transactions/0xb122b1937d31efbefbda0ff851e8d86fa97603bfd9fd16ad301e4f45a07f8e10",
+      "submittedAt": "2026-08-01T10:46:31.008Z",
       "status": "7",
-      "acceptedAt": "2026-08-01T06:43:46.761Z",
-      "finalizedAt": "2026-08-01T06:44:18.656Z",
+      "acceptedAt": "2026-08-01T10:46:41.685Z",
+      "finalizedAt": "2026-08-01T10:47:10.418Z",
       "executionResult": "SUCCESS"
     }
   ],
+  "refundSafety": {
+    "invalidMarketId": "missing-ab9d047c",
+    "creditBeforeWei": "0",
+    "contractBalanceBeforeWei": "0",
+    "fundingResult": {
+      "accepted": false,
+      "reason": "MARKET_NOT_FOUND",
+      "received": "1000000000000000",
+      "credited_refund": "1000000000000000"
+    },
+    "creditAfterRejectWei": "1000000000000000",
+    "contractBalanceAfterRejectWei": "1000000000000000",
+    "parentTxHash": "0x92781d9f253989590d212d5cdeca75d48074d53f0ad62fe79bd9214d15308701",
+    "children": [
+      {
+        "txHash": "0xf86cf2adda2039c40a0ce98cb952a54f5953e28945e50554022383c8c0229ae2",
+        "explorer": "https://explorer-studio.genlayer.com/transactions/0xf86cf2adda2039c40a0ce98cb952a54f5953e28945e50554022383c8c0229ae2",
+        "status": "7",
+        "executionResult": "",
+        "sender": "0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
+        "recipient": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+        "valueWei": "1000000000000000"
+      }
+    ],
+    "creditAfterWithdrawWei": "0",
+    "contractBalanceAfterWithdrawWei": "0",
+    "completedAt": "2026-08-01T10:34:53.020Z"
+  },
   "terms": {
-    "closeAt": "2026-08-01T06:39:56.697Z",
-    "resolveAt": "2026-08-01T06:41:56.697Z",
-    "refundAt": "2026-08-01T06:56:56.697Z"
+    "closeAt": "2026-08-01T10:42:54.431Z",
+    "resolveAt": "2026-08-01T10:44:54.431Z",
+    "refundAt": "2026-08-01T10:59:54.431Z"
   },
   "withdrawal": {
     "creditBeforeWei": "2000000000000000",
-    "winnerBalanceBeforeWei": "2018918000000000000000",
+    "winnerBalanceBeforeWei": "2018919000000000000000",
+    "parentTxHash": "0xb122b1937d31efbefbda0ff851e8d86fa97603bfd9fd16ad301e4f45a07f8e10",
     "children": [
       {
-        "txHash": "0x6c900fa178c9f37cfa441631b2163bec6c2714c097a810cc99d1bc0c6362bc1a",
-        "explorer": "https://explorer-studio.genlayer.com/transactions/0x6c900fa178c9f37cfa441631b2163bec6c2714c097a810cc99d1bc0c6362bc1a",
+        "txHash": "0x6db0b915da3fa065d294b2b00f99dc5708f5aa6ac785669c5258d99bfa8cf389",
+        "explorer": "https://explorer-studio.genlayer.com/transactions/0x6db0b915da3fa065d294b2b00f99dc5708f5aa6ac785669c5258d99bfa8cf389",
         "status": "7",
         "executionResult": "",
-        "sender": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
+        "sender": "0xAb9d047c35c44Ac8D0fc7eC73C478EdbFb36a39d",
         "recipient": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
         "valueWei": "2000000000000000"
       }
-    ],
-    "parentTxHash": "0xb84f9bf11e4ce186aa46288e7a160f529b487f7e609c798cd452e88db4ebd6ce"
+    ]
   },
-  "completedAt": "2026-08-01T07:01:00.197Z",
+  "completedAt": "2026-08-01T10:47:16.980Z",
   "canonical": {
     "market": {
       "application_number": "NDA220185",
@@ -114,7 +164,7 @@
       "attempt_count": 1,
       "biomarker": "ROS1-positive",
       "category": "ONCOLOGY",
-      "close_at": "2026-08-01T06:39:56.697Z",
+      "close_at": "2026-08-01T10:42:54.431Z",
       "combination_requirement": "NOT_REQUIRED",
       "condition": "non-small cell lung cancer",
       "consequence_class": "WIN_YES",
@@ -126,10 +176,10 @@
       "no_total": "1000000000000000",
       "population": "adults",
       "prior_therapy": "received a prior ROS1 kinase inhibitor",
-      "refund_at": "2026-08-01T06:56:56.697Z",
+      "refund_at": "2026-08-01T10:59:54.431Z",
       "remaining_pool": "0",
       "remaining_winning_stake": "0",
-      "resolve_at": "2026-08-01T06:41:56.697Z",
+      "resolve_at": "2026-08-01T10:44:54.431Z",
       "status": "RESOLVED_YES",
       "title": "Will the exact FDA label match the locked Jideytro approval scope?",
       "total_pool": "2000000000000000",
@@ -144,7 +194,7 @@
       "condition": "MATCH",
       "consequence_class": "WIN_YES",
       "disease_stage": "MATCH",
-      "market_id": "jideytro-20260722-9f623cd3",
+      "market_id": "jideytro-20260722-ab9d047c",
       "population": "MATCH",
       "prior_therapy": "MATCH",
       "source_consistency": "CONSISTENT",
@@ -154,7 +204,7 @@
     "winnerPosition": {
       "claimed": true,
       "credited_amount": "2000000000000000",
-      "market_id": "jideytro-20260722-9f623cd3",
+      "market_id": "jideytro-20260722-ab9d047c",
       "owner": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
       "side": "YES",
       "stake": "1000000000000000"
@@ -163,15 +213,15 @@
     "winner": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
     "creditBeforeWei": "2000000000000000",
     "creditAfterWei": "0",
-    "winnerBalanceBeforeWithdrawWei": "2018918000000000000000",
-    "winnerBalanceAfterWithdrawWei": "2018920000000000000000",
+    "winnerBalanceBeforeWithdrawWei": "2018919000000000000000",
+    "winnerBalanceAfterWithdrawWei": "2018921000000000000000",
     "contractSummary": {
       "contract_liability": "0",
       "market_count": 1,
       "policy_version": "LABELSCOPE_FDA_V1",
-      "total_credited": "2000000000000000",
-      "total_received": "2000000000000000",
-      "total_withdrawn": "2000000000000000"
+      "total_credited": "3000000000000000",
+      "total_received": "3000000000000000",
+      "total_withdrawn": "3000000000000000"
     }
   }
 }
