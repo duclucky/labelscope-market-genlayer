@@ -12,6 +12,7 @@
     "test:deployment": ".venv\\Scripts\\python.exe -m pytest tests/test_deployment_receipts.py -v && node --test tests/studionet_script.test.mjs",
     "studionet:inspect": "node scripts/studionet.mjs inspect",
     "studionet:deploy": "node scripts/studionet.mjs deploy",
+    "studionet:archive": "node scripts/studionet.mjs archive-superseded",
     "studionet:lifecycle": "node scripts/studionet.mjs lifecycle",
     "test:frontend": "npm --workspace frontend/labelscope run test",
     "build:frontend": "npm --workspace frontend/labelscope run build",

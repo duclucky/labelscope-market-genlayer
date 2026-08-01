@@ -98,6 +98,15 @@ class ResolutionAttempt:
     consequence_class: str
 
 
+@gl.evm.contract_interface
+class _ExternalRecipient:
+    class View:
+        pass
+
+    class Write:
+        pass
+
+
 def _addr_str(address: Address) -> str:
     try:
         return address.as_hex.lower()
@@ -767,7 +776,7 @@ class LabelScopeMarket(gl.Contract):
         self.credits[account_key] = bigint(int(available) - int(requested))
         self.total_withdrawn = bigint(int(self.total_withdrawn) + int(requested))
         self.contract_liability = bigint(int(self.contract_liability) - int(requested))
-        gl.get_contract_at(sender).emit_transfer(value=u256(requested))
+        _ExternalRecipient(sender).emit_transfer(value=u256(requested))
 
     @gl.public.view
     def get_market(self, market_id: str) -> dict:

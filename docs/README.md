@@ -209,7 +209,8 @@ Resolution requires positive collateral on both YES and NO. A one-sided pool can
 - Every resolution increments `attempt_count` once and writes a new immutable attempt key.
 - Final states reject additional resolution/cancellation.
 - `Position.claimed` prevents payout/refund replay.
-- Withdrawal checks and debits credit/liability before `emit_transfer`.
+- Withdrawal checks and debits credit/liability before sending through the current
+  `@gl.evm.contract_interface` EOA transfer boundary.
 
 ## Evidence policy
 
@@ -276,7 +277,9 @@ No model rationale is consensus-critical or stored. The UI explains a result fro
 - Accepted/finalized boundary: contract settlement is usable only after the resolution transaction is finalized and canonical state is reread. Submitted/accepted UI state is provisional.
 - Ledger invariant: `total_received - total_withdrawn == contract_liability`; liability is the sum of remaining market pools and account credits. Claiming moves liability from a market pool to account credit without changing total liability.
 - Pro-rata invariant: for resolved markets, each winner receives a floor share from current remaining pool/current remaining winning stake; the final winner receives all remaining dust, so aggregate credits equal the full pool.
-- Child-message/transfer evidence: withdrawal zeroes/reduces credit and liability before `emit_transfer`; network evidence must show finalized parent/child receipt projection plus before/after balance and canonical credit.
+- Child-message/transfer evidence: withdrawal zeroes/reduces credit and liability before
+  `_ExternalRecipient(sender).emit_transfer`; network evidence must show finalized
+  parent/external-child receipt projection plus before/after balance and canonical credit.
 - Withdrawal/settlement: `claim_credit` performs accounting only; `withdraw_credit` performs pull-based native-GEN transfer. There is no push callback or operator custody path.
 - Cure/appeal/restore: no appeal can reverse a finalized winner. Evidence failure is cured only by a new append-only retry before final resolution; after `refund_at`, cancellation opens exact refunds.
 

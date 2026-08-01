@@ -48,19 +48,62 @@ export function extractContractAddress(receipt) {
   );
 }
 
+export function executionResultFromReceipt(receipt) {
+  const leader = Array.isArray(receipt?.consensus_data?.leader_receipt)
+    ? receipt.consensus_data.leader_receipt[0]
+    : receipt?.consensus_data?.leader_receipt;
+  return String(
+    receipt?.txExecutionResultName ??
+      receipt?.execution_result?.status ??
+      receipt?.execution_result ??
+      leader?.execution_result ??
+      '',
+  );
+}
+
 export function safeReceipt(receipt) {
   return {
     txHash: String(receipt?.hash ?? receipt?.txId ?? receipt?.transaction_hash ?? ''),
     status: String(receipt?.statusName ?? receipt?.status ?? ''),
-    executionResult: String(
-      receipt?.txExecutionResultName ?? receipt?.execution_result?.status ?? receipt?.execution_result ?? '',
-    ),
+    executionResult: executionResultFromReceipt(receipt),
     contractAddress: extractContractAddress(receipt),
   };
 }
 
 export function selectMarketId(address) {
   return `jideytro-20260722-${address.toLowerCase().slice(2, 10)}`;
+}
+
+export function buildMarketArgs(marketId, closeAt, resolveAt, refundAt) {
+  return [
+    marketId,
+    'Will the exact FDA label match the locked Jideytro approval scope?',
+    'ONCOLOGY',
+    'Jideytro (zidesamtinib)',
+    'NDA220185',
+    '3760e421-b523-4d9b-e063-6394a90ab94b',
+    '20260722',
+    'https://www.fda.gov/drugs/resources-information-approved-drugs/fda-approves-zidesamtinib-ros1-positive-non-small-cell-lung-cancer',
+    'non-small cell lung cancer',
+    'ROS1-positive',
+    'adults',
+    'locally advanced or metastatic',
+    'received a prior ROS1 kinase inhibitor',
+    'NOT_REQUIRED',
+    'FDA approval',
+    closeAt,
+    resolveAt,
+    refundAt,
+  ];
+}
+
+export function assertArchivable(summary, balance) {
+  if (String(summary?.contract_liability ?? '') !== '0') {
+    throw new Error('Cannot archive a deployment with nonzero canonical liability.');
+  }
+  if (BigInt(balance) !== 0n) {
+    throw new Error('Cannot archive a deployment with nonzero contract balance.');
+  }
 }
 
 function loadEnvironment() {
@@ -188,9 +231,10 @@ async function inspectNetwork() {
   });
 }
 
-function assertSuccessful(receipt, action) {
-  if (receipt.txExecutionResultName !== ExecutionResult.FINISHED_WITH_RETURN) {
-    throw new Error(`${action} finalized without successful execution (${receipt.txExecutionResultName ?? 'unknown'}).`);
+export function assertSuccessfulReceipt(receipt, action) {
+  const executionResult = executionResultFromReceipt(receipt);
+  if (![ExecutionResult.FINISHED_WITH_RETURN, 'SUCCESS'].includes(executionResult)) {
+    throw new Error(`${action} finalized without successful execution (${executionResult || 'unknown'}).`);
   }
 }
 
@@ -201,6 +245,7 @@ async function waitFinalized(read, hash, action) {
     interval: 3000,
     retries: 600,
   });
+  const acceptedAt = nowIso();
   publicLog('accepted', { action, txHash: hash, status: accepted.statusName ?? accepted.status, explorer: explorerTx(hash) });
   const finalized = await read.waitForTransactionReceipt({
     hash,
@@ -208,15 +253,30 @@ async function waitFinalized(read, hash, action) {
     interval: 3000,
     retries: 600,
   });
-  assertSuccessful(finalized, action);
+  const finalizedAt = nowIso();
+  try {
+    assertSuccessfulReceipt(finalized, action);
+  } catch (error) {
+    error.finalizedReceipt = finalized;
+    error.acceptedAt = acceptedAt;
+    error.finalizedAt = finalizedAt;
+    publicLog('finalized-error', {
+      action,
+      txHash: hash,
+      status: finalized.statusName ?? finalized.status,
+      executionResult: executionResultFromReceipt(finalized),
+      explorer: explorerTx(hash),
+    });
+    throw error;
+  }
   publicLog('finalized', {
     action,
     txHash: hash,
     status: finalized.statusName ?? finalized.status,
-    executionResult: finalized.txExecutionResultName,
+    executionResult: executionResultFromReceipt(finalized),
     explorer: explorerTx(hash),
   });
-  return { acceptedAt: nowIso(), finalizedAt: nowIso(), receipt: finalized };
+  return { acceptedAt, finalizedAt, receipt: finalized };
 }
 
 async function sendAndRecord({ read, client, actor, address, action, functionName, args = [], value = 0n, state }) {
@@ -233,15 +293,46 @@ async function sendAndRecord({ read, client, actor, address, action, functionNam
   state.transactions.push(record);
   writeJson(LIFECYCLE_PATH, state);
   publicLog('submitted', { action, actor: actor.address, txHash: hash, explorer: record.explorer });
-  const result = await waitFinalized(read, hash, action);
+  let result;
+  try {
+    result = await waitFinalized(read, hash, action);
+  } catch (error) {
+    if (error?.finalizedReceipt) {
+      Object.assign(record, {
+        acceptedAt: error.acceptedAt,
+        finalizedAt: error.finalizedAt,
+        status: error.finalizedReceipt.statusName ?? String(error.finalizedReceipt.status ?? ''),
+        executionResult: executionResultFromReceipt(error.finalizedReceipt),
+      });
+      writeJson(LIFECYCLE_PATH, state);
+    }
+    throw error;
+  }
   Object.assign(record, {
     acceptedAt: result.acceptedAt,
     finalizedAt: result.finalizedAt,
     status: result.receipt.statusName ?? String(result.receipt.status ?? ''),
-    executionResult: result.receipt.txExecutionResultName,
+    executionResult: executionResultFromReceipt(result.receipt),
   });
   writeJson(LIFECYCLE_PATH, state);
   return result.receipt;
+}
+
+async function reconcileLifecycleTransactions(read, state) {
+  let changed = false;
+  for (const record of state.transactions ?? []) {
+    if (record.status !== 'SUBMITTED' || !record.txHash) continue;
+    const transaction = await read.getTransaction({ hash: record.txHash });
+    if ((transaction.statusName ?? transaction.status) === TransactionStatus.FINALIZED || transaction.status === 7) {
+      Object.assign(record, {
+        status: transaction.statusName ?? 'FINALIZED',
+        executionResult: executionResultFromReceipt(transaction),
+        finalizedAt: record.finalizedAt ?? nowIso(),
+      });
+      changed = true;
+    }
+  }
+  if (changed) writeJson(LIFECYCLE_PATH, state);
 }
 
 async function deploy() {
@@ -298,7 +389,7 @@ async function deploy() {
   const complete = {
     ...pending,
     status: result.receipt.statusName ?? String(result.receipt.status ?? ''),
-    executionResult: result.receipt.txExecutionResultName,
+    executionResult: executionResultFromReceipt(result.receipt),
     acceptedAt: result.acceptedAt,
     finalizedAt: result.finalizedAt,
     address,
@@ -308,6 +399,72 @@ async function deploy() {
   writeJson(DEPLOYMENT_PATH, complete);
   publicLog('deployment-complete', { address, explorer: complete.contractExplorer, summary });
   return complete;
+}
+
+async function archiveSuperseded() {
+  const deployment = readJson(DEPLOYMENT_PATH);
+  const lifecycleState = readJson(LIFECYCLE_PATH);
+  if (!deployment?.address) throw new Error('No active deployment exists to archive.');
+  const { read } = clients();
+  const [summary, balance] = await Promise.all([
+    read.readContract({
+      address: deployment.address,
+      functionName: 'get_contract_summary',
+      args: [],
+      jsonSafeReturn: true,
+    }),
+    read.getBalance({ address: deployment.address }),
+  ]);
+  assertArchivable(summary, balance);
+
+  const withdraw = [...(lifecycleState?.transactions ?? [])]
+    .reverse()
+    .find((transaction) => transaction.action === 'withdraw_credit');
+  const failedChildren = [];
+  if (withdraw?.txHash) {
+    const childIds = await read.getTriggeredTransactionIds({ hash: withdraw.txHash });
+    for (const hash of childIds) {
+      const transaction = await read.getTransaction({ hash });
+      failedChildren.push({
+        txHash: hash,
+        explorer: explorerTx(hash),
+        status: transaction.statusName ?? String(transaction.status ?? ''),
+        executionResult: executionResultFromReceipt(transaction),
+        sender: transaction.sender ?? transaction.from_address ?? '',
+        recipient: transaction.recipient ?? transaction.to_address ?? '',
+        valueWei: String(transaction.value ?? ''),
+      });
+    }
+  }
+
+  const archiveDir = path.join(EVIDENCE_DIR, 'archive', deployment.address.toLowerCase());
+  if (fs.existsSync(archiveDir)) throw new Error('Archive directory already exists for this deployment.');
+  const archivedAt = nowIso();
+  writeJson(path.join(archiveDir, 'deployment.json'), {
+    ...deployment,
+    status: 'SUPERSEDED',
+    supersededAt: archivedAt,
+    reason:
+      'The payout used the Intelligent-Contract message interface for an EOA. The parent finalized, but the external child finalized ERROR. Replaced with the current EVM recipient interface.',
+    recovery: {
+      canonicalSummary: summary,
+      contractBalanceWei: balance.toString(),
+      remainingAccountingZero: true,
+      failedChildren,
+      limitation:
+        'The failed child value was not automatically returned. This revision is retained as negative network evidence and must not be reused.',
+    },
+  });
+  if (lifecycleState) writeJson(path.join(archiveDir, 'lifecycle.json'), lifecycleState);
+  fs.unlinkSync(DEPLOYMENT_PATH);
+  if (fs.existsSync(LIFECYCLE_PATH)) fs.unlinkSync(LIFECYCLE_PATH);
+  publicLog('deployment-archived', {
+    address: deployment.address,
+    archivedAt,
+    canonicalLiabilityWei: String(summary.contract_liability),
+    contractBalanceWei: balance.toString(),
+    failedChildCount: failedChildren.length,
+  });
 }
 
 function isoAfter(milliseconds) {
@@ -320,6 +477,15 @@ async function sleepUntil(iso, label) {
     publicLog('waiting', { for: label, secondsRemaining: seconds });
     await new Promise((resolve) => setTimeout(resolve, Math.min(seconds * 1000, 30000)));
   }
+}
+
+async function waitForTriggeredTransactions(read, parentHash) {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const ids = await read.getTriggeredTransactionIds({ hash: parentHash });
+    if (ids.length > 0) return ids;
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+  throw new Error('No child transaction appeared for the finalized value-transfer parent.');
 }
 
 async function lifecycle() {
@@ -339,6 +505,7 @@ async function lifecycle() {
   if (state.contractAddress !== address || state.marketId !== marketId) {
     throw new Error('Lifecycle evidence belongs to another deployment. Archive it before proceeding.');
   }
+  await reconcileLifecycleTransactions(read, state);
 
   let ids = await read.readContract({ address, functionName: 'get_market_ids', args: [], jsonSafeReturn: true });
   if (!Array.isArray(ids)) throw new Error('Canonical market index is not an array.');
@@ -355,26 +522,7 @@ async function lifecycle() {
       address,
       action: 'create_market',
       functionName: 'create_market',
-      args: [
-        marketId,
-        'Will the exact FDA label match the locked Jideytro approval scope?',
-        'FDA_LABEL_SCOPE',
-        'Jideytro (zidesamtinib)',
-        'NDA220185',
-        '3760e421-b523-4d9b-e063-6394a90ab94b',
-        '20260722',
-        'https://www.fda.gov/drugs/resources-information-approved-drugs/fda-approves-zidesamtinib-ros1-positive-non-small-cell-lung-cancer',
-        'non-small cell lung cancer',
-        'ROS1-positive',
-        'adults',
-        'locally advanced or metastatic',
-        'received a prior ROS1 kinase inhibitor',
-        'NOT_REQUIRED',
-        'FDA approval',
-        closeAt,
-        resolveAt,
-        refundAt,
-      ],
+      args: buildMarketArgs(marketId, closeAt, resolveAt, refundAt),
       state,
     });
   }
@@ -420,7 +568,27 @@ async function lifecycle() {
   const creditBefore = BigInt(await read.readContract({ address, functionName: 'get_credit', args: [winner.actor.address], jsonSafeReturn: true }));
   const balanceBefore = await read.getBalance({ address: winner.actor.address });
   if (creditBefore > 0n) {
-    await sendAndRecord({ read, client: winner.client, actor: winner.actor, address, action: 'withdraw_credit', functionName: 'withdraw_credit', args: [creditBefore], state });
+    state.withdrawal = {
+      creditBeforeWei: creditBefore.toString(),
+      winnerBalanceBeforeWei: balanceBefore.toString(),
+    };
+    writeJson(LIFECYCLE_PATH, state);
+    const parentReceipt = await sendAndRecord({ read, client: winner.client, actor: winner.actor, address, action: 'withdraw_credit', functionName: 'withdraw_credit', args: [creditBefore], state });
+    const parentHash = String(parentReceipt.hash ?? parentReceipt.txId ?? state.transactions.at(-1)?.txHash ?? '');
+    const childIds = await waitForTriggeredTransactions(read, parentHash);
+    const children = [];
+    for (const hash of childIds) {
+      const result = await waitFinalized(read, hash, 'withdraw_transfer');
+      children.push({
+        txHash: hash,
+        explorer: explorerTx(hash),
+        status: result.receipt.statusName ?? String(result.receipt.status ?? ''),
+        executionResult: executionResultFromReceipt(result.receipt),
+      });
+    }
+    state.withdrawal.parentTxHash = parentHash;
+    state.withdrawal.children = children;
+    writeJson(LIFECYCLE_PATH, state);
   }
   const [creditAfter, balanceAfter, summary, attemptCount] = await Promise.all([
     read.readContract({ address, functionName: 'get_credit', args: [winner.actor.address], jsonSafeReturn: true }),
@@ -428,17 +596,22 @@ async function lifecycle() {
     read.readContract({ address, functionName: 'get_contract_summary', args: [], jsonSafeReturn: true }),
     read.readContract({ address, functionName: 'get_attempt_count', args: [marketId], jsonSafeReturn: true }),
   ]);
+  if (state.withdrawal && BigInt(balanceAfter) < BigInt(state.withdrawal.winnerBalanceBeforeWei) + BigInt(state.withdrawal.creditBeforeWei)) {
+    throw new Error('External transfer finalized but the winner balance did not increase by the withdrawn credit.');
+  }
   market = await read.readContract({ address, functionName: 'get_market', args: [marketId], jsonSafeReturn: true });
   winnerPosition = await read.readContract({ address, functionName: 'get_position', args: [marketId, winner.actor.address], jsonSafeReturn: true });
+  const finalAttempt = await read.readContract({ address, functionName: 'get_attempt', args: [marketId, Number(attemptCount)], jsonSafeReturn: true });
   state.completedAt = nowIso();
   state.canonical = {
     market,
+    finalAttempt,
     winnerPosition,
     attemptCount: Number(attemptCount),
     winner: winner.actor.address,
-    creditBeforeWei: creditBefore.toString(),
+    creditBeforeWei: state.withdrawal?.creditBeforeWei ?? creditBefore.toString(),
     creditAfterWei: String(creditAfter),
-    winnerBalanceBeforeWithdrawWei: balanceBefore.toString(),
+    winnerBalanceBeforeWithdrawWei: state.withdrawal?.winnerBalanceBeforeWei ?? balanceBefore.toString(),
     winnerBalanceAfterWithdrawWei: balanceAfter.toString(),
     contractSummary: summary,
   };
@@ -459,8 +632,9 @@ async function main() {
   const command = process.argv[2] ?? 'inspect';
   if (command === 'inspect') return inspectNetwork();
   if (command === 'deploy') return deploy();
+  if (command === 'archive-superseded') return archiveSuperseded();
   if (command === 'lifecycle' || command === 'all') return lifecycle();
-  throw new Error('Usage: node scripts/studionet.mjs [inspect|deploy|lifecycle|all]');
+  throw new Error('Usage: node scripts/studionet.mjs [inspect|deploy|archive-superseded|lifecycle|all]');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === SCRIPT_PATH) {

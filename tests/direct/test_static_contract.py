@@ -46,6 +46,23 @@ def test_value_receiving_entrypoint_is_payable_and_resolution_accepts_no_verdict
     assert "gl.message.value" in ast.unparse(fund)
 
 
+def test_native_withdrawal_uses_current_external_eoa_interface():
+    source = CONTRACT.read_text(encoding="ascii")
+    tree = ast.parse(source)
+    interfaces = [node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "_ExternalRecipient"]
+
+    assert len(interfaces) == 1
+    assert "gl.evm.contract_interface" in ast.unparse(interfaces[0])
+    withdraw = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "withdraw_credit"
+    )
+    rendered = ast.unparse(withdraw)
+    assert "_ExternalRecipient(sender).emit_transfer" in rendered
+    assert "gl.get_contract_at(sender).emit_transfer" not in rendered
+
+
 def test_custom_validator_is_semantic_and_sandboxed_by_default():
     source = CONTRACT.read_text(encoding="ascii")
     assert "gl.vm.run_nondet(" in source

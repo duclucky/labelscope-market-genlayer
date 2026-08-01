@@ -126,14 +126,11 @@ def test_withdrawal_debits_before_native_transfer_and_preserves_invariant(
     sends = []
 
     def capture_send(vm, request):
-        if "PostMessage" in request:
-            message = request["PostMessage"]
+        if "EthSend" in request:
+            message = request["EthSend"]
             sends.append(message)
             assert int(contract.get_credit(to_hex(direct_bob))) == 120
             assert contract.get_contract_summary()["contract_liability"] == "120"
-            contract_address = vm._contract_address
-            current_balance = vm._balances.get(bytes(contract_address), 0)
-            vm.deal(contract_address, current_balance - int(message["value"]))
             return {"ok": None}
         return None
 
@@ -143,7 +140,6 @@ def test_withdrawal_debits_before_native_transfer_and_preserves_invariant(
     assert len(sends) == 1
     assert int(sends[0]["value"]) == 40
     assert sends[0]["address"].as_hex == to_hex(direct_bob)
-    assert sends[0]["on"] == "finalized"
     summary = contract.get_contract_summary()
     assert summary["total_received"] == "160"
     assert summary["total_withdrawn"] == "40"

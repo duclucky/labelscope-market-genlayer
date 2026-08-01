@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  assertArchivable,
+  assertSuccessfulReceipt,
+  buildMarketArgs,
+  executionResultFromReceipt,
   extractContractAddress,
   parseEnvText,
   safeReceipt,
@@ -32,6 +36,23 @@ test('safeReceipt exposes only public transaction evidence', () => {
   });
 });
 
+test('current Studio receipt proves execution through the allowlisted leader result', () => {
+  const receipt = {
+    statusName: 'FINALIZED',
+    result: 6,
+    consensus_data: {
+      leader_receipt: [{ execution_result: 'SUCCESS', node_config: { private: 'never expose' } }],
+    },
+  };
+
+  assert.equal(executionResultFromReceipt(receipt), 'SUCCESS');
+  assert.doesNotThrow(() => assertSuccessfulReceipt(receipt, 'deploy'));
+  assert.throws(
+    () => assertSuccessfulReceipt({ statusName: 'FINALIZED' }, 'deploy'),
+    /without successful execution/,
+  );
+});
+
 test('extractContractAddress handles both SDK and Studio decoded shapes', () => {
   assert.equal(
     extractContractAddress({ txDataDecoded: { contractAddress: '0x2222222222222222222222222222222222222222' } }),
@@ -48,4 +69,24 @@ test('selectMarketId is deterministic for a deployment and avoids hardcoded atte
     selectMarketId('0xABCDEFabcdefABCDEFabcdefABCDEFabcdef1234'),
     'jideytro-20260722-abcdefab',
   );
+});
+
+test('the live Jideytro market uses the contract oncology enum and complete constructor shape', () => {
+  const args = buildMarketArgs(
+    'jideytro-20260722-abcdefab',
+    '2026-08-01T06:20:00Z',
+    '2026-08-01T06:22:00Z',
+    '2026-08-01T06:37:00Z',
+  );
+
+  assert.equal(args.length, 18);
+  assert.equal(args[2], 'ONCOLOGY');
+  assert.equal(args[4], 'NDA220185');
+  assert.equal(args[5], '3760e421-b523-4d9b-e063-6394a90ab94b');
+});
+
+test('a superseded value revision can only be archived after liability and balance reach zero', () => {
+  assert.doesNotThrow(() => assertArchivable({ contract_liability: '0' }, 0n));
+  assert.throws(() => assertArchivable({ contract_liability: '1' }, 0n), /liability/);
+  assert.throws(() => assertArchivable({ contract_liability: '0' }, 1n), /balance/);
 });

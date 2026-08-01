@@ -1,0 +1,52 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "status": "SUPERSEDED",
+  "txHash": "0x2c4cb81e8879bec1eaf78bcdedfe94876eb5106d441006207ecfc995a3f65eb0",
+  "explorer": "https://explorer-studio.genlayer.com/transactions/0x2c4cb81e8879bec1eaf78bcdedfe94876eb5106d441006207ecfc995a3f65eb0",
+  "deployer": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+  "submittedAt": "2026-08-01T06:07:09.991Z",
+  "sourceCommit": "001b7c382981039ac3cd1d506033bbfda5254d8a",
+  "contractSha256": "279670d2665b91ccc2b5dfecc0c73177b5256c290c9f3d9a5c73d855ffa202dc",
+  "depends": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+  "sdk": "genlayer-js@1.1.8",
+  "executionResult": "SUCCESS",
+  "acceptedAt": "2026-08-01T06:08:58.750Z",
+  "finalizedAt": "2026-08-01T06:08:58.751Z",
+  "address": "0xD36F45d6D878Bf1adC2346614919C659C8D08f7f",
+  "contractExplorer": "https://explorer-studio.genlayer.com/address/0xD36F45d6D878Bf1adC2346614919C659C8D08f7f",
+  "canonicalSummary": {
+    "contract_liability": "0",
+    "market_count": 0,
+    "policy_version": "LABELSCOPE_FDA_V1",
+    "total_credited": "0",
+    "total_received": "0",
+    "total_withdrawn": "0"
+  },
+  "supersededAt": "2026-08-01T06:29:34.627Z",
+  "reason": "The payout used the Intelligent-Contract message interface for an EOA. The parent finalized, but the external child finalized ERROR. Replaced with the current EVM recipient interface.",
+  "recovery": {
+    "canonicalSummary": {
+      "contract_liability": "0",
+      "market_count": 1,
+      "policy_version": "LABELSCOPE_FDA_V1",
+      "total_credited": "2000000000000000",
+      "total_received": "2000000000000000",
+      "total_withdrawn": "2000000000000000"
+    },
+    "contractBalanceWei": "0",
+    "remainingAccountingZero": true,
+    "failedChildren": [
+      {
+        "txHash": "0x6013362053f3f5ccbf54ca454fa204577947eb0a550b0f9f829b7caadcd84b59",
+        "explorer": "https://explorer-studio.genlayer.com/transactions/0x6013362053f3f5ccbf54ca454fa204577947eb0a550b0f9f829b7caadcd84b59",
+        "status": "FINALIZED",
+        "executionResult": "ERROR",
+        "sender": "0xD36F45d6D878Bf1adC2346614919C659C8D08f7f",
+        "recipient": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+        "valueWei": "2000000000000000"
+      }
+    ],
+    "limitation": "The failed child value was not automatically returned. This revision is retained as negative network evidence and must not be reused."
+  }
+}
