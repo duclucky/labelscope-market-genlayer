@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   assertArchivable,
+  assertExternalTransferReceipt,
   assertSuccessfulReceipt,
   buildMarketArgs,
   executionResultFromReceipt,
@@ -89,4 +90,28 @@ test('a superseded value revision can only be archived after liability and balan
   assert.doesNotThrow(() => assertArchivable({ contract_liability: '0' }, 0n));
   assert.throws(() => assertArchivable({ contract_liability: '1' }, 0n), /liability/);
   assert.throws(() => assertArchivable({ contract_liability: '0' }, 1n), /balance/);
+});
+
+test('an external EOA child is proven by finality, bound transfer fields, and no explicit error', () => {
+  const receipt = {
+    statusName: 'FINALIZED',
+    sender: '0x1111111111111111111111111111111111111111',
+    recipient: '0x2222222222222222222222222222222222222222',
+    value: 2000,
+  };
+  const expected = {
+    sender: '0x1111111111111111111111111111111111111111',
+    recipient: '0x2222222222222222222222222222222222222222',
+    value: 2000n,
+  };
+
+  assert.doesNotThrow(() => assertExternalTransferReceipt(receipt, expected));
+  assert.throws(
+    () => assertExternalTransferReceipt({ ...receipt, txExecutionResultName: 'ERROR' }, expected),
+    /explicit execution failure/,
+  );
+  assert.throws(
+    () => assertExternalTransferReceipt({ ...receipt, recipient: expected.sender }, expected),
+    /recipient/,
+  );
 });

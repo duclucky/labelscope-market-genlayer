@@ -57,4 +57,9 @@ The frontend is accepted as the visual foundation. It will not be rebuilt. Integ
 - Removed fake wallet/balance/mint/profile/settings behavior, Gemini/server code, stale markets, and unsupported USDC/Arbitrum claims.
 - Locked the default demo identity to the matching FDA/openFDA Jideytro record: `NDA220185`, set ID `3760e421-b523-4d9b-e063-6394a90ab94b`, effective time `20260722`.
 
-Local proof: TypeScript passed, 7 focused frontend tests passed, and the Vite production build completed. Studionet/browser-wallet write proof remains pending Phase 8/9 evidence.
+Final proof: TypeScript passed, 7 focused frontend tests passed, and local plus
+Vercel production builds completed. The production app read the finalized
+Jideytro market from the active Studionet contract on desktop. Script-signed
+Studionet writes are evidenced separately. Browser-wallet write proof remains
+pending because the installed OKX Wallet did not grant a connection; no provider
+or signature was simulated.

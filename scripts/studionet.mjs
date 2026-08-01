@@ -106,6 +106,22 @@ export function assertArchivable(summary, balance) {
   }
 }
 
+export function assertExternalTransferReceipt(receipt, expected) {
+  const status = receipt?.statusName ?? receipt?.status;
+  if (status !== TransactionStatus.FINALIZED && status !== 7) {
+    throw new Error('External transfer child is not finalized.');
+  }
+  const executionResult = executionResultFromReceipt(receipt);
+  if (executionResult && ![ExecutionResult.FINISHED_WITH_RETURN, 'SUCCESS'].includes(executionResult)) {
+    throw new Error(`External transfer child has explicit execution failure (${executionResult}).`);
+  }
+  const sender = String(receipt?.sender ?? receipt?.from_address ?? '').toLowerCase();
+  const recipient = String(receipt?.recipient ?? receipt?.to_address ?? '').toLowerCase();
+  if (sender !== expected.sender.toLowerCase()) throw new Error('External transfer sender does not match the contract.');
+  if (recipient !== expected.recipient.toLowerCase()) throw new Error('External transfer recipient does not match the winner.');
+  if (BigInt(receipt?.value ?? 0) !== BigInt(expected.value)) throw new Error('External transfer value does not match the withdrawn credit.');
+}
+
 function loadEnvironment() {
   const files = [path.join(REPO, '.env'), path.resolve(REPO, '..', '.env')];
   const loaded = {};
@@ -488,6 +504,25 @@ async function waitForTriggeredTransactions(read, parentHash) {
   throw new Error('No child transaction appeared for the finalized value-transfer parent.');
 }
 
+async function waitExternalFinalized(read, hash, expected) {
+  const receipt = await read.waitForTransactionReceipt({
+    hash,
+    status: TransactionStatus.FINALIZED,
+    interval: 3000,
+    retries: 600,
+  });
+  assertExternalTransferReceipt(receipt, expected);
+  publicLog('external-transfer-finalized', {
+    txHash: hash,
+    status: receipt.statusName ?? receipt.status,
+    sender: receipt.sender ?? receipt.from_address,
+    recipient: receipt.recipient ?? receipt.to_address,
+    valueWei: String(receipt.value ?? ''),
+    explorer: explorerTx(hash),
+  });
+  return receipt;
+}
+
 async function lifecycle() {
   const deployment = await deploy();
   const { read, primary, integrator, primaryClient, integratorClient } = clients();
@@ -574,19 +609,35 @@ async function lifecycle() {
     };
     writeJson(LIFECYCLE_PATH, state);
     const parentReceipt = await sendAndRecord({ read, client: winner.client, actor: winner.actor, address, action: 'withdraw_credit', functionName: 'withdraw_credit', args: [creditBefore], state });
-    const parentHash = String(parentReceipt.hash ?? parentReceipt.txId ?? state.transactions.at(-1)?.txHash ?? '');
+    state.withdrawal.parentTxHash = String(parentReceipt.hash ?? parentReceipt.txId ?? state.transactions.at(-1)?.txHash ?? '');
+    writeJson(LIFECYCLE_PATH, state);
+  }
+  if (state.withdrawal && !state.withdrawal.parentTxHash) {
+    state.withdrawal.parentTxHash = [...state.transactions].reverse().find((transaction) => transaction.action === 'withdraw_credit')?.txHash;
+    writeJson(LIFECYCLE_PATH, state);
+  }
+  if (state.withdrawal && !state.withdrawal.children) {
+    const parentHash = state.withdrawal.parentTxHash;
+    if (!parentHash) throw new Error('Withdrawal evidence is missing its parent transaction hash.');
+    state.withdrawal.parentTxHash = parentHash;
     const childIds = await waitForTriggeredTransactions(read, parentHash);
     const children = [];
     for (const hash of childIds) {
-      const result = await waitFinalized(read, hash, 'withdraw_transfer');
+      const receipt = await waitExternalFinalized(read, hash, {
+        sender: address,
+        recipient: winner.actor.address,
+        value: BigInt(state.withdrawal.creditBeforeWei),
+      });
       children.push({
         txHash: hash,
         explorer: explorerTx(hash),
-        status: result.receipt.statusName ?? String(result.receipt.status ?? ''),
-        executionResult: executionResultFromReceipt(result.receipt),
+        status: receipt.statusName ?? String(receipt.status ?? ''),
+        executionResult: executionResultFromReceipt(receipt),
+        sender: receipt.sender ?? receipt.from_address ?? '',
+        recipient: receipt.recipient ?? receipt.to_address ?? '',
+        valueWei: String(receipt.value ?? ''),
       });
     }
-    state.withdrawal.parentTxHash = parentHash;
     state.withdrawal.children = children;
     writeJson(LIFECYCLE_PATH, state);
   }
@@ -622,7 +673,7 @@ async function lifecycle() {
     verdict: market.verdict,
     consequenceClass: market.consequence_class,
     winner: winner.actor.address,
-    creditBeforeWei: creditBefore.toString(),
+    creditBeforeWei: state.withdrawal?.creditBeforeWei ?? creditBefore.toString(),
     creditAfterWei: String(creditAfter),
     contractSummary: summary,
   });

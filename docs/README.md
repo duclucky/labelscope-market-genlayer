@@ -6,8 +6,8 @@
 - Project name: `LabelScope Market`
 - Project slug: `labelscope-market`
 - Category: `Projects`
-- Status: `BUILDING`
-- Repository: local project repository; the public remote is created only after the publication gate
+- Status: `VALIDATED - STUDIONET SCRIPT LIFECYCLE AND PRODUCTION READ VERIFIED; BROWSER WALLET PENDING`
+- Repository: `https://github.com/duclucky/labelscope-market-genlayer`
 - Target network: `studionet`
 - Contract count: one (`LabelScopeMarket`)
 
@@ -396,15 +396,15 @@ No important claim is complete until its network-evidence cell has a real artifa
 
 ### Projects track
 
-- [ ] One reusable semantic contract with a documented interface and no unjustified consumer.
-- [ ] Full direct/adversarial/accounting tests and GenVM lint pass.
-- [ ] Bounded live FDA semantic adjudication finalizes on Studionet.
-- [ ] Two opposed public actors fund isolated positions with native GEN.
-- [ ] Finalized outcome opens the correct credit and a withdrawal moves value exactly once.
+- [x] One reusable semantic contract with a documented interface and no unjustified consumer.
+- [x] Full direct/adversarial/accounting tests and GenVM lint pass.
+- [x] Bounded live FDA semantic adjudication finalizes on Studionet.
+- [x] Two opposed public actors fund isolated positions with native GEN.
+- [x] Finalized outcome opens the correct credit and a withdrawal moves value exactly once.
 - [ ] Frontend signs at least one real wallet write, shows submitted/accepted/finalized/failure/retry, and rereads canonical state.
-- [ ] Desktop and mobile browser lifecycle evidence exists.
-- [ ] Public repository, CI, deployed frontend, README, security report, and submission packet match current evidence.
-- [ ] Primary UI contains only user-relevant data/actions; system/reviewer details remain hidden/contextual.
+- [x] Desktop/mobile interface audit and production canonical-read evidence exist; browser-wallet write remains pending.
+- [x] Public repository, deployed frontend, README, network evidence, and submission packet match current evidence; CI must pass after the first push.
+- [x] Primary UI contains only user-relevant data/actions; system/reviewer details remain hidden/contextual.
 
 ## Honest limitations
 
@@ -413,7 +413,10 @@ No important claim is complete until its network-evidence cell has a real artifa
 - The creator can choose the public question before anyone funds it; users must review immutable terms. Validators remove outcome control, not poor-question risk.
 - No finalized market can be appealed in v1; only `UNVERIFIABLE` attempts are retryable before the refund boundary.
 - Legal, gambling, securities, medical-device, regulatory, security, and production readiness have not been reviewed.
-- GitHub, CI, browser-wallet, Studionet, frontend hosting, adoption, and submission claims remain pending until their artifacts exist.
+- Browser-wallet write capture, external adoption, non-Studionet networks, and
+  Portal submission confirmation remain pending. Repository, Studionet lifecycle,
+  and frontend hosting evidence are current; CI is claimed only after the public
+  workflow succeeds.
 
 ## Kill criteria
 

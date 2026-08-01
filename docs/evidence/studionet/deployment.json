@@ -1,0 +1,26 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "status": "7",
+  "txHash": "0xc45f31813f32da6fa5c22aaacb98a873ebb3d8ecb23d0d45b02830e48ec4e808",
+  "explorer": "https://explorer-studio.genlayer.com/transactions/0xc45f31813f32da6fa5c22aaacb98a873ebb3d8ecb23d0d45b02830e48ec4e808",
+  "deployer": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+  "submittedAt": "2026-08-01T06:31:08.472Z",
+  "sourceCommit": "1f68ed71871d3c1342cb3fb345c2cb8c79e85654",
+  "contractSha256": "6cb63f37cce12741cee84309d5f04e10c22bb0a3d51e54b5df450f2374458072",
+  "depends": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+  "sdk": "genlayer-js@1.1.8",
+  "executionResult": "SUCCESS",
+  "acceptedAt": "2026-08-01T06:31:17.900Z",
+  "finalizedAt": "2026-08-01T06:31:45.563Z",
+  "address": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
+  "contractExplorer": "https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E",
+  "canonicalSummary": {
+    "contract_liability": "0",
+    "market_count": 0,
+    "policy_version": "LABELSCOPE_FDA_V1",
+    "total_credited": "0",
+    "total_received": "0",
+    "total_withdrawn": "0"
+  }
+}
