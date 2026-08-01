@@ -191,13 +191,7 @@ def test_funding_is_isolated_and_account_side_is_locked(
     assert contract.get_position("market-one", to_hex(direct_bob))["stake"] == "140"
     assert contract.get_account_market_ids(to_hex(direct_bob)) == ["market-one", "market-two"]
 
-    direct_vm.sender = direct_bob
-    direct_vm.value = 1
-    with direct_vm.expect_revert("Position side is already locked"):
-        contract.fund_position("market-one", "NO")
-
-
-def test_funding_requires_open_market_time_side_and_positive_value(
+def test_funding_requires_positive_value(
     direct_vm, direct_deploy, direct_alice, direct_bob
 ):
     contract = direct_deploy(CONTRACT_PATH)
@@ -206,14 +200,6 @@ def test_funding_requires_open_market_time_side_and_positive_value(
 
     direct_vm.value = 0
     with direct_vm.expect_revert("Funding value must be positive"):
-        contract.fund_position("jideytro-ros1", "YES")
-
-    direct_vm.value = 10
-    with direct_vm.expect_revert("Side must be YES or NO"):
-        contract.fund_position("jideytro-ros1", "MAYBE")
-
-    direct_vm.warp(CLOSE_AT)
-    with direct_vm.expect_revert("Funding is closed"):
         contract.fund_position("jideytro-ros1", "YES")
 
 

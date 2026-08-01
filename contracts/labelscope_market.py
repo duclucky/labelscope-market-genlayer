@@ -520,27 +520,74 @@ class LabelScopeMarket(gl.Contract):
         )
         self.market_ids.append(market_id)
 
+    def _funding_result(
+        self,
+        accepted: bool,
+        reason: str,
+        received: bigint,
+        credited_refund: bigint,
+    ) -> dict:
+        return {
+            "accepted": accepted,
+            "reason": reason,
+            "received": str(int(received)),
+            "credited_refund": str(int(credited_refund)),
+        }
+
+    def _credit_funding_rejection(
+        self,
+        sender: Address,
+        received: bigint,
+        reason: str,
+    ) -> dict:
+        account_key = _addr_str(sender)
+        current_credit = self.credits.get(account_key, bigint(0))
+        self.credits[account_key] = bigint(int(current_credit) + int(received))
+        self.total_received = bigint(int(self.total_received) + int(received))
+        self.total_credited = bigint(int(self.total_credited) + int(received))
+        self.contract_liability = bigint(int(self.contract_liability) + int(received))
+        return self._funding_result(False, reason, received, received)
+
     @gl.public.write.payable
-    def fund_position(self, market_id: str, side: str) -> None:
-        if market_id not in self.markets:
-            raise gl.vm.UserError("Market does not exist")
-        market = self.markets[market_id]
-        if market.status != "OPEN":
-            raise gl.vm.UserError("Market is not open")
-        if _now() >= _parse_utc(market.close_at):
-            raise gl.vm.UserError("Funding is closed")
-        if side not in SIDES:
-            raise gl.vm.UserError("Side must be YES or NO")
+    def fund_position(self, market_id: str, side: str) -> dict:
         received = bigint(int(gl.message.value))
         if int(received) <= 0:
             raise gl.vm.UserError("Funding value must be positive")
-
         sender = gl.message.sender_address
+        if market_id not in self.markets:
+            return self._credit_funding_rejection(
+                sender,
+                received,
+                "MARKET_NOT_FOUND",
+            )
+        market = self.markets[market_id]
+        if market.status != "OPEN":
+            return self._credit_funding_rejection(
+                sender,
+                received,
+                "MARKET_NOT_OPEN",
+            )
+        if _now() >= _parse_utc(market.close_at):
+            return self._credit_funding_rejection(
+                sender,
+                received,
+                "FUNDING_CLOSED",
+            )
+        if side not in SIDES:
+            return self._credit_funding_rejection(
+                sender,
+                received,
+                "INVALID_SIDE",
+            )
         key = _position_key(market_id, sender)
         if key in self.positions:
             position = self.positions[key]
             if position.side != side:
-                raise gl.vm.UserError("Position side is already locked")
+                return self._credit_funding_rejection(
+                    sender,
+                    received,
+                    "SIDE_LOCKED",
+                )
             position.stake = bigint(int(position.stake) + int(received))
         else:
             self.positions[key] = Position(
@@ -558,6 +605,7 @@ class LabelScopeMarket(gl.Contract):
         market.total_pool = bigint(int(market.total_pool) + int(received))
         self.total_received = bigint(int(self.total_received) + int(received))
         self.contract_liability = bigint(int(self.contract_liability) + int(received))
+        return self._funding_result(True, "ACCEPTED", received, bigint(0))
 
     @gl.public.write
     def lock_market(self, market_id: str) -> None:
