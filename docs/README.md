@@ -47,7 +47,7 @@
 | Differentiation | PASS | The pooled multi-participant lifecycle, FDA facet schema, and pro-rata consequence differ structurally from covenant, recall, quarantine, and bilateral escrow work. |
 | Claim-to-code | PASS | Every important product claim below maps to a method/state, view, direct test, and network evidence item. |
 | Full lifecycle | PASS | The defined Projects lifecycle includes browser creation/funding, opposed wallets, validator adjudication, finality, canonical rereads, credit claim, and native-GEN withdrawal. |
-| Scope honesty | PASS | Uncaptured Studionet, browser-wallet, deployment, CI, adoption, and legal evidence remains explicitly pending until produced. |
+| Scope honesty | PASS | Network, browser-wallet, deployment, CI, adoption, and legal claims stay pending until their own evidence is produced; the current status is recorded below. |
 
 One failed mandatory gate requires redesign or rejection; UI scope cannot compensate for it.
 
@@ -401,8 +401,8 @@ No important claim is complete until its network-evidence cell has a real artifa
 - [x] Bounded live FDA semantic adjudication finalizes on Studionet.
 - [x] Two opposed public actors fund isolated positions with native GEN.
 - [x] Finalized outcome opens the correct credit and a withdrawal moves value exactly once.
-- [ ] Frontend signs at least one real wallet write, shows submitted/accepted/finalized/failure/retry, and rereads canonical state.
-- [x] Desktop/mobile interface audit and production canonical-read evidence exist; browser-wallet write remains pending.
+- [x] Frontend signs real wallet writes, shows submitted/accepted/finalized/failure/retry, and rereads canonical state.
+- [x] Desktop/mobile interface audit plus production browser-wallet and canonical-read evidence exist.
 - [x] Public repository, deployed frontend, README, network evidence, and submission packet match current evidence; CI must pass after the first push.
 - [x] Primary UI contains only user-relevant data/actions; system/reviewer details remain hidden/contextual.
 
@@ -413,10 +413,11 @@ No important claim is complete until its network-evidence cell has a real artifa
 - The creator can choose the public question before anyone funds it; users must review immutable terms. Validators remove outcome control, not poor-question risk.
 - No finalized market can be appealed in v1; only `UNVERIFIABLE` attempts are retryable before the refund boundary.
 - Legal, gambling, securities, medical-device, regulatory, security, and production readiness have not been reviewed.
-- Browser-wallet write capture, external adoption, non-Studionet networks, and
-  Portal submission confirmation remain pending. Repository, Studionet lifecycle,
-  and frontend hosting evidence are current; CI is claimed only after the public
-  workflow succeeds.
+- External adoption, non-Studionet networks, and Portal submission confirmation
+  remain pending. Hosted Studionet is rate-limited; bounded retry improves the
+  product experience but does not replace canonical reads. Repository, browser
+  and script-signed Studionet lifecycles, and frontend hosting evidence are
+  current; CI is claimed only after the public workflow succeeds.
 
 ## Kill criteria
 

@@ -10,9 +10,9 @@ LabelScope Market — Validator-Resolved FDA Label Scope Pools
 
 ## Notes / Description
 
-LabelScope is a fully collateralized FDA label-scope market on GenLayer. Opposed YES/NO participants fund one immutable pool; neither the creator nor frontend can submit the outcome. Validators independently fetch a locked FDA approval notice and the exact openFDA label bound to application number, set ID, and effective date. They normalize seven indication facets plus source consistency and compare semantic meaning, not rationale wording. A finalized MATCH or NO_MATCH selects the winning side and opens pro-rata native-GEN credit; unavailable or contradictory evidence is non-settling and retryable. The reusable one-contract interface covers typed market creation, funding, resolution, claims, withdrawals, and canonical views. Sixty automated tests pass. Studionet proves opposed funding, MATCH/WIN_YES consensus, 0.002 GEN claim, finalized external transfer, exact balance delta, and zero final liability. The production frontend reads canonical state.
+LabelScope is a fully collateralized FDA label-scope market on GenLayer. Opposed YES/NO participants fund one immutable pool; neither the creator nor frontend can submit the outcome. Validators independently fetch a locked FDA approval notice and the exact openFDA label bound to application number, set ID, and effective date. They normalize seven indication facets plus source consistency and compare semantic meaning, not rationale wording. A finalized MATCH or NO_MATCH selects the winning side and opens pro-rata native-GEN credit; unavailable or contradictory evidence is non-settling and retryable. The reusable one-contract interface covers typed market creation, funding, resolution, claims, withdrawals, and canonical views. Sixty-eight automated tests pass. Studionet proves opposed funding, MATCH/WIN_YES consensus, retry/refund recovery, browser-wallet writes, a finalized external transfer, and canonical rereads. The production frontend uses the deployed contract.
 
-Character count: `961`
+Character count: `979`
 
 ## Evidence
 
@@ -20,23 +20,24 @@ Character count: `961`
 - Primary contract explorer: https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E
 - Consumer/integration explorer: N/A — no separate consumer contract is justified.
 - Lifecycle evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/lifecycle.json
+- Browser-wallet evidence: https://github.com/duclucky/labelscope-market-genlayer/blob/main/docs/evidence/studionet/browser-wallet.json
 - CI: https://github.com/duclucky/labelscope-market-genlayer/actions/workflows/check.yml
 - Demo/frontend: https://labelscope-market-genlayer.vercel.app
-- Frontend proof: production canonical reads verified; browser-wallet write remains pending. Script-signed Studionet writes are separately evidenced.
+- Frontend proof: OKX browser-wallet creation, funding, lock, resolve, retry, cancel, claim, withdrawal, failure handling, and canonical rereads are captured. Script-signed provisioning is labeled separately.
 
 ## Verified facts
 
 - Contracts: 1 — `LabelScopeMarket`
 - Public methods: 15 — 8 view, 7 write
-- Automated tests: 60 passing, zero skip/xfail — 41 direct contract, 4 receipt parser, 8 Studionet script, 7 frontend
+- Automated tests: 68 passing, zero skip/xfail — 41 direct contract, 4 receipt parser, 8 Studionet script, 15 frontend
 - Network: Studionet, chain ID 61999
 - Lifecycle: two opposed actors funded 0.001 GEN each; validators finalized `MATCH`, `WIN_YES`; winner claimed and received 0.002 GEN; credit/liability ended at zero.
 
 ## Honest limitations / pending
 
-Browser-wallet write capture remains pending because the installed OKX Wallet did
-not grant a connection. Only Studionet and one bounded FDA market are proven. No
-mainnet, other testnet, adoption, medical, legal, gambling, securities, or
+Only Studionet and bounded FDA label-scope markets are proven. Hosted Studionet is
+rate-limited and can temporarily delay reads or finality polling. No mainnet,
+other testnet, adoption, medical, legal, gambling, securities, or
 production-security claim is made. Portal submission confirmation is pending user
 action; Codex did not click the final Submit button.
 

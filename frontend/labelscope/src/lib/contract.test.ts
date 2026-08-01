@@ -75,6 +75,133 @@ describe('canonical market adapter', () => {
 });
 
 describe('transaction finality', () => {
+  it('turns a wallet rejection into a concise user-facing message', async () => {
+    const phases: Array<{ status: string; message?: string }> = [];
+    const rawWalletError =
+      'User rejected the request. Details: Request Signature: User denied request signature. Version: viem@2.55.10';
+    const writeClient = { writeContract: vi.fn().mockRejectedValue(new Error(rawWalletError)) };
+    const readClient = { waitForTransactionReceipt: vi.fn() };
+
+    await expect(
+      submitAndFinalize({
+        writeClient,
+        readClient,
+        request: {
+          address: '0x3333333333333333333333333333333333333333',
+          functionName: 'resolve_market',
+          args: ['m1'],
+          value: 0n,
+        },
+        onPhase: (phase) => phases.push(phase),
+        reload: vi.fn(),
+      }),
+    ).rejects.toThrow('Transaction cancelled in your wallet.');
+
+    expect(phases.at(-1)).toEqual({
+      status: 'failed',
+      hash: undefined,
+      message: 'Transaction cancelled in your wallet.',
+    });
+  });
+
+  it('turns a wallet transport failure into a concise user-facing message', async () => {
+    const writeClient = {
+      writeContract: vi
+        .fn()
+        .mockRejectedValue(new Error('An unknown RPC error occurred. Details: Failed to fetch Version: viem@2.55.10')),
+    };
+
+    await expect(
+      submitAndFinalize({
+        writeClient,
+        readClient: { waitForTransactionReceipt: vi.fn() },
+        request: {
+          address: '0x3333333333333333333333333333333333333333',
+          functionName: 'resolve_market',
+          args: ['m1'],
+          value: 0n,
+        },
+        onPhase: vi.fn(),
+        reload: vi.fn(),
+      }),
+    ).rejects.toThrow('Studionet connection was interrupted. Try again.');
+  });
+
+  it('accepts SUCCESS nested in the current Studio leader receipt', async () => {
+    const phases: string[] = [];
+    const reload = vi.fn();
+    const writeClient = { writeContract: vi.fn().mockResolvedValue('0xstudio') };
+    const readClient = {
+      waitForTransactionReceipt: vi
+        .fn()
+        .mockResolvedValueOnce({ status: 5, consensus_data: { leader_receipt: [{ execution_result: 'SUCCESS' }] } })
+        .mockResolvedValueOnce({ status: 7, consensus_data: { leader_receipt: [{ execution_result: 'SUCCESS' }] } }),
+    };
+
+    await submitAndFinalize({
+      writeClient,
+      readClient,
+      request: { address: '0x3333333333333333333333333333333333333333', functionName: 'create_market', args: [], value: 0n },
+      onPhase: (phase) => phases.push(phase.status),
+      reload,
+    });
+
+    expect(phases).toEqual(['submitting', 'submitted', 'decided', 'finalized']);
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it('retries a transient Studio capacity error while waiting for finality', async () => {
+    const phases: string[] = [];
+    const reload = vi.fn();
+    const writeClient = { writeContract: vi.fn().mockResolvedValue('0xbusy') };
+    const readClient = {
+      waitForTransactionReceipt: vi
+        .fn()
+        .mockResolvedValueOnce({ status: 5, consensus_data: { leader_receipt: [{ execution_result: 'SUCCESS' }] } })
+        .mockRejectedValueOnce(new Error('Server busy: all 8 execution slots occupied, retry later'))
+        .mockRejectedValueOnce(new Error('Server busy: all 8 execution slots occupied, retry later'))
+        .mockRejectedValueOnce(new Error('Server busy: all 8 execution slots occupied, retry later'))
+        .mockRejectedValueOnce(new Error('Server busy: all 8 execution slots occupied, retry later'))
+        .mockRejectedValueOnce(new Error('Server busy: all 8 execution slots occupied, retry later'))
+        .mockResolvedValueOnce({ status: 7, consensus_data: { leader_receipt: [{ execution_result: 'SUCCESS' }] } }),
+    };
+
+    await submitAndFinalize({
+      writeClient,
+      readClient,
+      request: { address: '0x3333333333333333333333333333333333333333', functionName: 'claim_credit', args: ['m1'], value: 0n },
+      onPhase: (phase) => phases.push(phase.status),
+      reload,
+    });
+
+    expect(phases).toEqual(['submitting', 'submitted', 'decided', 'finalized']);
+    expect(readClient.waitForTransactionReceipt).toHaveBeenCalledTimes(7);
+    expect(reload).toHaveBeenCalledOnce();
+  }, 10_000);
+
+  it('retries a transient fetch failure while tracking an accepted transaction', async () => {
+    const phases: string[] = [];
+    const writeClient = { writeContract: vi.fn().mockResolvedValue('0xnetwork') };
+    const readClient = {
+      waitForTransactionReceipt: vi
+        .fn()
+        .mockResolvedValueOnce({ status: 5, consensus_data: { leader_receipt: [{ execution_result: 'SUCCESS' }] } })
+        .mockRejectedValueOnce(new Error('An unknown RPC error occurred. Details: Failed to fetch Version: viem@2.55.10'))
+        .mockResolvedValueOnce({ status: 7, consensus_data: { leader_receipt: [{ execution_result: 'SUCCESS' }] } }),
+    };
+
+    await submitAndFinalize({
+      writeClient,
+      readClient,
+      request: { address: '0x3333333333333333333333333333333333333333', functionName: 'claim_credit', args: ['m1'], value: 0n },
+      onPhase: (phase) => phases.push(phase.status),
+      reload: vi.fn(),
+    });
+
+    expect(phases).toEqual(['submitting', 'submitted', 'decided', 'finalized']);
+    expect(readClient.waitForTransactionReceipt).toHaveBeenCalledTimes(3);
+  });
+
   it('tracks submitted, decided, finalized, then reloads canonical state', async () => {
     const phases: string[] = [];
     const reload = vi.fn();

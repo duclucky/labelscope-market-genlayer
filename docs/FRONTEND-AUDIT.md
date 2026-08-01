@@ -57,9 +57,25 @@ The frontend is accepted as the visual foundation. It will not be rebuilt. Integ
 - Removed fake wallet/balance/mint/profile/settings behavior, Gemini/server code, stale markets, and unsupported USDC/Arbitrum claims.
 - Locked the default demo identity to the matching FDA/openFDA Jideytro record: `NDA220185`, set ID `3760e421-b523-4d9b-e063-6394a90ab94b`, effective time `20260722`.
 
-Final proof: TypeScript passed, 7 focused frontend tests passed, and local plus
-Vercel production builds completed. The production app read the finalized
-Jideytro market from the active Studionet contract on desktop. Script-signed
-Studionet writes are evidenced separately. Browser-wallet write proof remains
-pending because the installed OKX Wallet did not grant a connection; no provider
-or signature was simulated.
+## Live browser audit result
+
+- OKX Wallet connected to Studionet and restored the authorized account without
+  any simulated identity, balance, or signature.
+- Browser writes covered create, fund, invalid write rejection, lock, resolve,
+  retry, cancel, claim, and withdraw. The UI refreshed canonical state after
+  finalization and showed only the actions legal for the current state/account.
+- A complete browser lifecycle finalized `RESOLVED_YES / MATCH / WIN_YES`, moved
+  `0.002 GEN` to contract credit, and finalized the external child to the browser
+  wallet. A second lifecycle produced two `UNVERIFIABLE / NO_SETTLEMENT`
+  attempts before `CANCELLED_REFUND` and exact stake credit.
+- Duplicate-title cards now expose the stable market ID, and search matches the
+  exact ID so users cannot open the wrong market.
+- Current Studio `SUCCESS` leader receipts are normalized correctly. Bounded
+  retry covers temporary execution-slot and fetch failures for both reads and
+  finality polling; wallet rejection and hosted quota failures use concise
+  product messages instead of raw provider/RPC internals.
+
+Final proof: TypeScript passed, 15 focused frontend tests passed, and local plus
+Vercel production builds completed. Public browser evidence is stored in
+`docs/evidence/studionet/browser-wallet.json`; script-signed provisioning remains
+clearly labeled separately.

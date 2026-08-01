@@ -63,6 +63,46 @@ export const contractAddress = /^0x[0-9a-fA-F]{40}$/.test(contractAddressValue)
   : null;
 export const readClient = createClient({ chain: studionet });
 
+function isTransientRpcError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('server busy') ||
+    normalized.includes('execution slots occupied') ||
+    normalized.includes('failed to fetch') ||
+    normalized.includes('fetch failed') ||
+    normalized.includes('networkerror')
+  );
+}
+
+async function retryTransientRpc<T>(operation: () => Promise<T>): Promise<T> {
+  const maxAttempts = 20;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (!isTransientRpcError(message) || attempt === maxAttempts - 1) throw error;
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 1000));
+    }
+  }
+  throw new Error('Studionet retry exhausted unexpectedly.');
+}
+
+async function readCanonical(request: Record<string, unknown>): Promise<unknown> {
+  try {
+    return await retryTransientRpc(() => readClient.readContract(request as never));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (/rate limit exceeded/i.test(message)) {
+      throw new Error('Studionet request limit reached. Try again later.');
+    }
+    if (isTransientRpcError(message)) {
+      throw new Error('Studionet is temporarily unavailable. Try again shortly.');
+    }
+    throw error;
+  }
+}
+
 function genAmount(value: string): number {
   const raw = BigInt(value || '0');
   const whole = raw / 10n ** 18n;
@@ -228,7 +268,7 @@ function asObject<T>(value: unknown): T {
 
 export async function loadCanonicalSnapshot(account = ''): Promise<CanonicalSnapshot> {
   if (!contractAddress) throw new Error('Contract address is not configured for this deployment.');
-  const idsValue = await readClient.readContract({
+  const idsValue = await readCanonical({
     address: contractAddress,
     functionName: 'get_market_ids',
     args: [],
@@ -239,7 +279,7 @@ export async function loadCanonicalSnapshot(account = ''): Promise<CanonicalSnap
   const canonical = await Promise.all(
     ids.map(async (id) =>
       asObject<CanonicalMarket>(
-        await readClient.readContract({
+        await readCanonical({
           address: contractAddress,
           functionName: 'get_market',
           args: [id],
@@ -252,7 +292,7 @@ export async function loadCanonicalSnapshot(account = ''): Promise<CanonicalSnap
   if (!account) return { markets, positions: [], credit: 0 };
   const positionValues = await Promise.all(
     ids.map((id) =>
-      readClient.readContract({
+      readCanonical({
         address: contractAddress,
         functionName: 'get_position',
         args: [id, account],
@@ -285,7 +325,7 @@ export async function loadCanonicalSnapshot(account = ''): Promise<CanonicalSnap
       } satisfies UserPosition;
     })
     .filter((position) => position.stakedAmount > 0);
-  const creditValue = await readClient.readContract({
+  const creditValue = await readCanonical({
     address: contractAddress,
     functionName: 'get_credit',
     args: [account],
@@ -302,11 +342,48 @@ interface MinimalWriteClient {
   writeContract(request: Record<string, unknown>): Promise<string>;
 }
 
+interface MinimalReceipt {
+  statusName?: string;
+  txExecutionResultName?: string;
+  execution_result?: string | { status?: string };
+  consensus_data?: {
+    leader_receipt?: { execution_result?: string } | Array<{ execution_result?: string }>;
+  };
+}
+
 interface MinimalReadClient {
-  waitForTransactionReceipt(request: Record<string, unknown>): Promise<{
-    statusName?: string;
-    txExecutionResultName?: string;
-  }>;
+  waitForTransactionReceipt(request: Record<string, unknown>): Promise<MinimalReceipt>;
+}
+
+function executionResultFromReceipt(receipt: MinimalReceipt): string {
+  const leaderValue = receipt.consensus_data?.leader_receipt;
+  const leader = Array.isArray(leaderValue) ? leaderValue[0] : leaderValue;
+  const direct = receipt.execution_result;
+  return String(
+    receipt.txExecutionResultName ??
+      (typeof direct === 'object' ? direct.status : direct) ??
+      leader?.execution_result ??
+      '',
+  );
+}
+
+async function waitForReceipt(
+  readClient: MinimalReadClient,
+  request: Record<string, unknown>,
+): Promise<MinimalReceipt> {
+  return retryTransientRpc(() => readClient.waitForTransactionReceipt(request));
+}
+
+function transactionErrorMessage(rawMessage: string, hash: string): string {
+  if (/user (rejected|denied)/i.test(rawMessage)) {
+    return 'Transaction cancelled in your wallet.';
+  }
+  if (isTransientRpcError(rawMessage)) {
+    return hash
+      ? 'Studionet status check was interrupted. Refresh canonical state before retrying.'
+      : 'Studionet connection was interrupted. Try again.';
+  }
+  return rawMessage || 'Transaction failed.';
 }
 
 export async function submitAndFinalize(options: {
@@ -321,29 +398,31 @@ export async function submitAndFinalize(options: {
   try {
     hash = await options.writeClient.writeContract(options.request);
     options.onPhase({ status: 'submitted', hash });
-    await options.readClient.waitForTransactionReceipt({
+    await waitForReceipt(options.readClient, {
       hash,
       status: TransactionStatus.ACCEPTED,
       interval: 3000,
       retries: 600,
     });
     options.onPhase({ status: 'decided', hash });
-    const finalized = await options.readClient.waitForTransactionReceipt({
+    const finalized = await waitForReceipt(options.readClient, {
       hash,
       status: TransactionStatus.FINALIZED,
       interval: 3000,
       retries: 600,
     });
-    if (finalized.txExecutionResultName !== ExecutionResult.FINISHED_WITH_RETURN) {
+    const executionResult = executionResultFromReceipt(finalized);
+    if (executionResult !== ExecutionResult.FINISHED_WITH_RETURN && executionResult !== 'SUCCESS') {
       throw new Error('Contract execution failed after finalization.');
     }
     await options.reload();
     options.onPhase({ status: 'finalized', hash });
     return hash;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Transaction failed.';
+    const rawMessage = error instanceof Error ? error.message : '';
+    const message = transactionErrorMessage(rawMessage, hash);
     options.onPhase({ status: 'failed', hash: hash || undefined, message });
-    throw error;
+    throw new Error(message);
   }
 }
 

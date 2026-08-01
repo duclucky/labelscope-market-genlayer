@@ -1,0 +1,96 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "capturedAt": "2026-08-01T08:46:11.484Z",
+  "contractAddress": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
+  "contractExplorer": "https://explorer-studio.genlayer.com/address/0x9F623cd3703c76E123aD561630A6B72364559f5E",
+  "frontend": {
+    "url": "https://labelscope-market-genlayer.vercel.app",
+    "verifiedProductionDeployment": "dpl_CS1RNF2i8CbUo7k3yZBv8H6snCmw"
+  },
+  "browserWallet": {
+    "provider": "OKX Wallet",
+    "address": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+    "networkConfirmed": "studionet",
+    "simulated": false
+  },
+  "creationAndGuardChecks": {
+    "marketId": "browser-audit-20260801-0738",
+    "createMarket": "0x398e4977aef862141fdb2484fd236bc7a257a8493b61e9eae3bb997e596bf2b9",
+    "fundYesHashCaptured": false,
+    "canonicalAfterFunding": {
+      "status": "OPEN",
+      "yesTotalWei": "1000000000000000",
+      "noTotalWei": "0",
+      "walletSide": "YES",
+      "walletStakeWei": "1000000000000000"
+    }
+  },
+  "browserFinalizedLifecycle": {
+    "marketId": "browser-e2e-20260801-0749",
+    "provisioning": {
+      "createMarketScript": "0x33c4fdf124185db6d2cfe7684ec9a23ec546f9405c5af4ba06db0fb273c5b6ba",
+      "fundNoIntegratorScript": "0x8a6d385efaf7087156cfd29d38893d6cda62fb99ba68109527c9dab1ddd59a55"
+    },
+    "browserTransactions": {
+      "fundYes": "0xc97d10dadaa5a7e42d6b9f1ab0335a7d7d6f2ddebeb3d9484e862d50184c0bd1",
+      "rejectedInvalidFund": "0x7de4bed03104b02cae321d7a1e991125448b613eae2e9660cca460d6b68851bb",
+      "lockMarket": "0xbfeeadd02ed4d4ddc36f8dbfcbb3949dbd6b35223758780f4065e3549f772134",
+      "resolveMarket": "0x69e821472649d8ecc7313fe771038f2ac4f303b9b6c6b92a77a3778837d48d20",
+      "claimCredit": "0x147e249b3bedd4102ff4cab2f01e41920683a5b95f8476c6fae1fede6278fe59",
+      "withdrawCredit": "0xbab13554a3f58afca8a08af5f6d429dcf7609c53b0ffd5200330505c484eb4de"
+    },
+    "withdrawalChild": {
+      "txHash": "0xb429cabf8b1b645a77997ff91545e953d56de88ecabb7c603fe16ee473090fa6",
+      "status": 7,
+      "sender": "0x9F623cd3703c76E123aD561630A6B72364559f5E",
+      "recipient": "0xC495ef51618D03267A1f227aFe5b27B38c748272",
+      "valueWei": "2000000000000000"
+    },
+    "canonicalResult": {
+      "status": "RESOLVED_YES",
+      "verdict": "MATCH",
+      "consequenceClass": "WIN_YES",
+      "walletPositionClaimed": true,
+      "walletCreditAfterWithdrawWei": "0",
+      "remainingPoolWei": "0"
+    }
+  },
+  "retryAndRefundLifecycle": {
+    "marketId": "browser-retry-20260801-0807",
+    "provisioning": {
+      "createMarketScript": "0xba72f00ff4b7f5698f9784a93af4d749e880fd390ac2674191396629d16d88aa",
+      "fundNoIntegratorScript": "0xe2beeb0dba2efb9886cd014a073252e03b8415d423185b7365ec9367ddfd906b"
+    },
+    "browserTransactions": {
+      "fundYes": "0x0b214f0ed7c7c4b79e3fe964487e0bdc005b5c2f50bcf212f0ba984fb541b943",
+      "resolveAttempt1": "0xc94104284fe71d7a3cda9b636a2251946f4f07ea91b7a0d0c271f7be04bee336",
+      "resolveAttempt2": "0x117aa87e5c99fd32a96d3520b51f04839051d907838ca74dad767ca7510baac8",
+      "cancelUnresolved": "0x0d0a729bcf1223ec1470ca17716edad04686f4716227bd1fcb391a9d8d1ab173",
+      "claimRefund": "0xa0d819e2f3b2c7b830d39c0d87dd187ce6f719bf9764f0f4cffec138adbda425"
+    },
+    "canonicalResult": {
+      "status": "CANCELLED_REFUND",
+      "attemptCount": 2,
+      "lastVerdict": "UNVERIFIABLE",
+      "lastConsequenceClass": "NO_SETTLEMENT",
+      "walletPositionClaimed": true,
+      "walletCreditedAmountWei": "1000000000000000"
+    }
+  },
+  "frontendBehaviorsVerified": [
+    "wallet restoration and Studionet account display",
+    "submitted, accepted, finalized, failed, and canonical refresh states",
+    "market creation and payable funding through the injected wallet",
+    "contextual lock, resolve, retry, cancel, claim, and withdraw actions",
+    "canonical positions and withdrawable credit",
+    "duplicate-title market identity and exact market-ID search",
+    "wallet rejection message without raw provider internals",
+    "transient capacity and fetch retry while polling canonical state and receipts"
+  ],
+  "notes": [
+    "No raw receipt, trace, validator configuration, provider payload, or wallet secret is retained.",
+    "Script provisioning is labeled separately from browser-wallet writes.",
+    "Hosted Studionet reached its documented request quota during post-lifecycle cleanup; canonical recovery continues without replaying an unknown transaction."
+  ]
+}

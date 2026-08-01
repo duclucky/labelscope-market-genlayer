@@ -10,9 +10,10 @@ native-GEN credit.
 
 [https://labelscope-market-genlayer.vercel.app](https://labelscope-market-genlayer.vercel.app)
 
-The production app reads canonical Studionet state. Its injected-wallet write
-adapter implements submitted, accepted, finalized, failed, retry, claim, and
-withdraw states; a browser-wallet write was not captured in this build session.
+The production app reads canonical Studionet state and signs real writes through
+an injected wallet. An OKX browser session verified submitted, accepted,
+finalized, failed, retry, cancel, claim, withdrawal, and canonical-refresh
+states without simulated balances, signatures, or finality.
 
 ## Deployed Contract
 
@@ -58,6 +59,7 @@ exactly `0.002 GEN`, credit became `0`, and contract liability became `0`.
 
 - [Active deployment evidence](docs/evidence/studionet/deployment.json)
 - [Consequential lifecycle evidence](docs/evidence/studionet/lifecycle.json)
+- [Browser-wallet lifecycle evidence](docs/evidence/studionet/browser-wallet.json)
 - [Evidence guide and transaction index](docs/evidence/studionet/README.md)
 - [Superseded revision and negative payout evidence](docs/evidence/studionet/archive/0xd36f45d6d878bf1adc2346614919c659c8d08f7f/deployment.json)
 
@@ -75,8 +77,8 @@ npm run check
 ```
 
 `npm run check` currently passes GenVM lint/semantic validation, 41 direct
-contract tests, 4 receipt-parser tests, 8 Studionet-script tests, 7 frontend
-tests, TypeScript, and the Vite production build: **60 automated tests, zero
+contract tests, 4 receipt-parser tests, 8 Studionet-script tests, 15 frontend
+tests, TypeScript, and the Vite production build: **68 automated tests, zero
 skip/xfail**.
 
 [GitHub Actions](https://github.com/duclucky/labelscope-market-genlayer/actions/workflows/check.yml)
@@ -110,12 +112,15 @@ configuration, stdout, stderr, and wallet material are never saved.
 ## Honest Limitations
 
 - Projects track is recommended because the deployed product combines the
-  reusable contract with a canonical-state frontend. Script-signed Studionet
-  writes and production reads are proven; browser-wallet write evidence remains
-  pending because the installed OKX Wallet did not grant a connection.
+  reusable contract with a canonical-state frontend. Script-signed and
+  browser-wallet Studionet writes, production reads, retry/refund recovery, and
+  an external browser-wallet withdrawal are evidenced separately.
 - Studionet is test infrastructure. No mainnet, Asimov, Bradbury, adoption,
   production-security, legal, gambling, securities, or medical-readiness claim is
   made.
+- Hosted Studionet is rate-limited. The frontend retries bounded transient
+  capacity/network failures and reports quota exhaustion without exposing raw RPC
+  details; this does not turn local or cached state into canonical state.
 - LabelScope is a narrow forecasting primitive, not medical advice. It supports
   only locked FDA label-scope markets, not arbitrary questions or sources.
 - V1 has retry/refund recovery for unverifiable evidence but no appeal after a

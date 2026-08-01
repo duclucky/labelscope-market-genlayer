@@ -20,6 +20,22 @@ deployer, address, transaction, finality, and initial canonical state.
 the normalized adjudication attempt, settlement state, external child, and balance
 proof.
 
+## Browser-wallet evidence
+
+`browser-wallet.json` records an OKX-injected-wallet session against the active
+production frontend. The browser wallet created and funded markets, observed a
+rejected write without canonical mutation, and signed lock, resolve, retry,
+cancel, claim, and withdrawal actions. The main browser lifecycle finalized
+`RESOLVED_YES / MATCH / WIN_YES`; its withdrawal child transferred
+`2000000000000000 wei` to the connected wallet and left that market's pool and
+wallet credit at zero. A separate missing-source lifecycle produced two
+`UNVERIFIABLE / NO_SETTLEMENT` attempts before `CANCELLED_REFUND` and an exact
+stake credit.
+
+Provisioning actions signed by the authorized scripts are labeled separately;
+they are not represented as browser-wallet proof. The file contains only public
+transaction hashes and allowlisted canonical fields.
+
 ## Superseded revision
 
 `archive/0xd36.../` is retained as negative evidence. Its withdrawal parent

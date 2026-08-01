@@ -22,6 +22,8 @@ export const MarketsDiscovery: React.FC<MarketsDiscoveryProps> = ({
   // Filtering logic
   const filteredMarkets = markets.filter((market) => {
     const matchesSearch =
+      market.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      market.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       market.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       market.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (market.sponsor && market.sponsor.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -167,10 +169,13 @@ export const MarketsDiscovery: React.FC<MarketsDiscoveryProps> = ({
                         {getCategoryIcon(market.category)}
                         <span>{market.category}</span>
                       </div>
-                      <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 border border-slate-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        {market.statusLabel}
-                      </span>
+                      <div className="text-right">
+                        <p className="font-mono text-[11px] text-slate-500 mb-1">{market.id}</p>
+                        <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1.5 border border-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          {market.statusLabel}
+                        </span>
+                      </div>
                     </div>
 
                     <h2
@@ -243,6 +248,7 @@ export const MarketsDiscovery: React.FC<MarketsDiscoveryProps> = ({
                       {getCategoryIcon(market.category)}
                       <span>{market.category}</span>
                     </div>
+                    <p className="font-mono text-[11px] text-slate-500 text-right break-all ml-3">{market.id}</p>
                   </div>
 
                   <h2

@@ -27,8 +27,16 @@ Date: 2026-08-01
 4. An external child may have no GenVM execution-result field. Its proof is final
    status, exact sender/recipient/value binding, absence of an explicit error, and
    the recipient balance delta.
-5. Browser-wallet evidence cannot be inferred from script signing. The installed
-   OKX Wallet did not connect, so that proof remains explicitly pending.
+5. Browser-wallet evidence cannot be inferred from script signing. A later OKX
+   session proved real creation, funding, lifecycle actions, retry/refund, claim,
+   withdrawal, failure handling, and canonical rereads; provisioning hashes remain
+   labeled separately from browser signatures.
+6. Hosted Studionet can return both execution-slot saturation and transport
+   failures while a transaction is progressing. Receipt and canonical-read paths
+   now use bounded retry, normalize the current leader `SUCCESS` shape, and never
+   advise replay when a submitted transaction has an unknown status.
+7. Duplicate market titles made card selection ambiguous. Stable market IDs are
+   now visible and searchable without turning the product into a technical UI.
 
 ## New anti-pattern
 
