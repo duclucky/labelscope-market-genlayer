@@ -14,6 +14,7 @@ import {
   Coins,
 } from 'lucide-react';
 import { Market, UserAction } from '../types';
+import { marketUrl } from '../lib/market-route';
 
 interface MarketDetailProps {
   market: Market;
@@ -44,8 +45,8 @@ export const MarketDetail: React.FC<MarketDetailProps> = ({
     setBusyAction('');
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
+  const handleShare = async () => {
+    await navigator.clipboard.writeText(marketUrl(market.id));
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -63,7 +64,7 @@ export const MarketDetail: React.FC<MarketDetailProps> = ({
         </button>
 
         <button
-          onClick={handleShare}
+          onClick={() => void handleShare()}
           className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 bg-white border border-slate-200 shadow-sm px-3 py-1.5 rounded-md transition-colors"
         >
           <Share2 className="w-3.5 h-3.5" />
@@ -261,7 +262,7 @@ export const MarketDetail: React.FC<MarketDetailProps> = ({
               {market.availableActions.includes('cancel') && <ActionButton icon={<RotateCcw className="w-4 h-4" />} busy={busyAction === 'cancel'} onClick={() => void runAction('cancel')}>Enable stake refunds</ActionButton>}
               {market.availableActions.includes('claim') && <ActionButton icon={<Coins className="w-4 h-4" />} busy={busyAction === 'claim'} onClick={() => void runAction('claim')}>Move payout to credit</ActionButton>}
             </div>
-            {market.availableActions.length === 0 && <p className="text-xs text-slate-500 text-center mt-3">Connect the relevant wallet to see available actions.</p>}
+            {market.availableActions.length === 0 && <p className="text-xs text-slate-500 text-center mt-3">No actions are available for this wallet and market state.</p>}
           </section>
 
           {/* Lifecycle Status */}

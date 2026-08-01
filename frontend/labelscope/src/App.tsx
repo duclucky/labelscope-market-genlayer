@@ -22,6 +22,7 @@ import {
   type EthereumProvider,
   type WalletOption,
 } from './lib/wallet';
+import { marketIdFromLocation, marketUrl, syncMarketLocation } from './lib/market-route';
 import type {
   CreateMarketInput,
   Market,
@@ -52,9 +53,11 @@ export function transactionPhaseMessage(transaction: TransactionPhase): string {
   return messages[transaction.status] ?? '';
 }
 
+export { marketIdFromLocation, marketUrl };
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState('markets');
-  const [selectedMarketId, setSelectedMarketId] = useState<string | null>(null);
+  const [selectedMarketId, setSelectedMarketId] = useState<string | null>(() => marketIdFromLocation());
   const [markets, setMarkets] = useState<Market[]>([]);
   const [positions, setPositions] = useState<UserPosition[]>([]);
   const [wallet, setWallet] = useState<UserWallet>(EMPTY_WALLET);
@@ -143,12 +146,19 @@ export default function App() {
   const handleSelectTab = (tab: string) => {
     setCurrentTab(tab);
     setSelectedMarketId(null);
+    syncMarketLocation(null);
     scrollToTop();
   };
 
   const handleSelectMarket = (market: Market) => {
     setSelectedMarketId(market.id);
+    syncMarketLocation(market.id);
     scrollToTop();
+  };
+
+  const closeMarketDetail = () => {
+    setSelectedMarketId(null);
+    syncMarketLocation(null);
   };
 
   const connectWallet = async (option: WalletOption) => {
@@ -218,6 +228,7 @@ export default function App() {
     if (ok) {
       setCurrentTab('markets');
       setSelectedMarketId(input.marketId);
+      syncMarketLocation(input.marketId);
       scrollToTop();
     }
     return ok;
@@ -259,7 +270,7 @@ export default function App() {
           wallet={wallet}
           onOpenWalletModal={() => setWalletModalOpen(true)}
           showBackButton={selectedMarket !== null}
-          onBack={() => setSelectedMarketId(null)}
+          onBack={closeMarketDetail}
           backTitle={selectedMarket?.title}
         />
 
@@ -306,7 +317,7 @@ export default function App() {
           ) : selectedMarket ? (
             <MarketDetail
               market={selectedMarket}
-              onBack={() => setSelectedMarketId(null)}
+              onBack={closeMarketDetail}
               onOpenFundModal={(market, side) =>
                 setFundModalState({ isOpen: true, market, initialType: side })
               }

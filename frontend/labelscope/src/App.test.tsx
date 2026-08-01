@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import App, { transactionPhaseMessage } from './App';
+import App, { marketIdFromLocation, marketUrl, transactionPhaseMessage } from './App';
 
 describe('application boot state', () => {
   it('fails honestly without a deployed address and never renders fixture markets', async () => {
@@ -21,5 +21,12 @@ describe('application boot state', () => {
     ).toBe(
       'Stake was not added. The full amount is available to withdraw from your contract credit.',
     );
+  });
+
+  it('encodes and restores a selected market in a shareable URL', () => {
+    expect(marketUrl('market/id', 'https://labelscope.example/markets?ref=audit')).toBe(
+      'https://labelscope.example/markets?ref=audit&market=market%2Fid',
+    );
+    expect(marketIdFromLocation('?ref=audit&market=market%2Fid')).toBe('market/id');
   });
 });
