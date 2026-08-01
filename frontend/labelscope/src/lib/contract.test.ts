@@ -1,11 +1,21 @@
+import { abi } from 'genlayer-js';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  fundingResultFromReceipt,
   getAvailableActions,
   mapCanonicalMarket,
   submitAndFinalize,
   type CanonicalMarket,
   type CanonicalPosition,
 } from './contract';
+
+function returned(value: unknown): string {
+  const payload = abi.calldata.encode(value as never);
+  const bytes = new Uint8Array(payload.length + 1);
+  bytes[0] = 0;
+  bytes.set(payload, 1);
+  return btoa(String.fromCharCode(...bytes));
+}
 
 const canonicalMarket: CanonicalMarket = {
   creator: '0x1111111111111111111111111111111111111111',
@@ -75,6 +85,76 @@ describe('canonical market adapter', () => {
 });
 
 describe('transaction finality', () => {
+  it('normalizes a credited funding rejection from the GenVM leader return', () => {
+    const result = fundingResultFromReceipt({
+      consensus_data: {
+        leader_receipt: [
+          {
+            execution_result: 'SUCCESS',
+            result: returned({
+              accepted: false,
+              reason: 'MARKET_NOT_FOUND',
+              received: '1000',
+              credited_refund: '1000',
+            }),
+          },
+        ],
+      },
+    });
+
+    expect(result).toEqual({
+      accepted: false,
+      reason: 'MARKET_NOT_FOUND',
+      received: '1000',
+      credited_refund: '1000',
+    });
+  });
+
+  it('reports a finalized credited rejection as withdrawable instead of funded', async () => {
+    const phases: Array<{ status: string; hash?: string; message?: string }> = [];
+    const result = returned({
+      accepted: false,
+      reason: 'SIDE_LOCKED',
+      received: '1000000000000000',
+      credited_refund: '1000000000000000',
+    });
+    const readClient = {
+      waitForTransactionReceipt: vi
+        .fn()
+        .mockResolvedValueOnce({
+          statusName: 'ACCEPTED',
+          txExecutionResultName: 'FINISHED_WITH_RETURN',
+        })
+        .mockResolvedValueOnce({
+          statusName: 'FINALIZED',
+          txExecutionResultName: 'FINISHED_WITH_RETURN',
+          consensus_data: {
+            leader_receipt: [{ execution_result: 'SUCCESS', result }],
+          },
+        }),
+    };
+
+    await submitAndFinalize({
+      writeClient: { writeContract: vi.fn().mockResolvedValue('0xrefund') },
+      readClient,
+      request: {
+        address: '0x3333333333333333333333333333333333333333',
+        functionName: 'fund_position',
+        args: ['jideytro-ros1', 'NO'],
+        value: 1000000000000000n,
+      },
+      onPhase: (phase) => phases.push(phase),
+      reload: vi.fn(),
+    });
+
+    expect(phases.at(-1)).toEqual({
+      status: 'finalized',
+      hash: '0xrefund',
+      message:
+        'Stake was not added. The full amount is available to withdraw from your contract credit.',
+    });
+  });
+
   it('turns a wallet rejection into a concise user-facing message', async () => {
     const phases: Array<{ status: string; message?: string }> = [];
     const rawWalletError =

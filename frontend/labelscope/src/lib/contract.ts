@@ -1,4 +1,4 @@
-import { createClient } from 'genlayer-js';
+import { abi, createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { ExecutionResult, TransactionStatus } from 'genlayer-js/types';
 import type { Address } from 'viem';
@@ -347,8 +347,61 @@ interface MinimalReceipt {
   txExecutionResultName?: string;
   execution_result?: string | { status?: string };
   consensus_data?: {
-    leader_receipt?: { execution_result?: string } | Array<{ execution_result?: string }>;
+    leader_receipt?:
+      | { execution_result?: string; result?: unknown }
+      | Array<{ execution_result?: string; result?: unknown }>;
   };
+}
+
+export interface FundingResult {
+  accepted: boolean;
+  reason:
+    | 'ACCEPTED'
+    | 'MARKET_NOT_FOUND'
+    | 'MARKET_NOT_OPEN'
+    | 'FUNDING_CLOSED'
+    | 'INVALID_SIDE'
+    | 'SIDE_LOCKED';
+  received: string;
+  credited_refund: string;
+}
+
+const FUNDING_REASONS: FundingResult['reason'][] = [
+  'ACCEPTED',
+  'MARKET_NOT_FOUND',
+  'MARKET_NOT_OPEN',
+  'FUNDING_CLOSED',
+  'INVALID_SIDE',
+  'SIDE_LOCKED',
+];
+
+export function fundingResultFromReceipt(receipt: MinimalReceipt): FundingResult | null {
+  const leaderValue = receipt.consensus_data?.leader_receipt;
+  const leader = Array.isArray(leaderValue) ? leaderValue[0] : leaderValue;
+  if (!leader || typeof leader.result !== 'string') return null;
+  try {
+    const bytes = Uint8Array.from(atob(leader.result), (character) => character.charCodeAt(0));
+    if (bytes[0] !== 0) return null;
+    const value = abi.calldata.decode(bytes.slice(1));
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const record = (value instanceof Map ? Object.fromEntries(value) : value) as Record<
+      string,
+      unknown
+    >;
+    const reason = String(record.reason) as FundingResult['reason'];
+    if (typeof record.accepted !== 'boolean' || !FUNDING_REASONS.includes(reason)) return null;
+    if (!/^\d+$/.test(String(record.received)) || !/^\d+$/.test(String(record.credited_refund))) {
+      return null;
+    }
+    return {
+      accepted: record.accepted,
+      reason,
+      received: String(record.received),
+      credited_refund: String(record.credited_refund),
+    };
+  } catch {
+    return null;
+  }
 }
 
 interface MinimalReadClient {
@@ -416,7 +469,18 @@ export async function submitAndFinalize(options: {
       throw new Error('Contract execution failed after finalization.');
     }
     await options.reload();
-    options.onPhase({ status: 'finalized', hash });
+    const fundingResult =
+      options.request.functionName === 'fund_position'
+        ? fundingResultFromReceipt(finalized)
+        : null;
+    options.onPhase({
+      status: 'finalized',
+      hash,
+      message:
+        fundingResult && !fundingResult.accepted
+          ? 'Stake was not added. The full amount is available to withdraw from your contract credit.'
+          : undefined,
+    });
     return hash;
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : '';

@@ -40,6 +40,18 @@ const EMPTY_WALLET: UserWallet = {
   pendingResolution: 0,
 };
 
+export function transactionPhaseMessage(transaction: TransactionPhase): string {
+  const messages: Partial<Record<TransactionPhase['status'], string>> = {
+    submitting: 'Confirm this action in your wallet.',
+    submitted: 'Submitted to Studionet. Waiting for validator decision.',
+    decided: 'Accepted by validators. Waiting for finalization.',
+    finalized:
+      transaction.message || 'Finalized. Canonical contract state has been refreshed.',
+    failed: transaction.message || 'The transaction failed.',
+  };
+  return messages[transaction.status] ?? '';
+}
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState('markets');
   const [selectedMarketId, setSelectedMarketId] = useState<string | null>(null);
@@ -233,14 +245,6 @@ export default function App() {
 
   const withdrawCredit = async (amount: number) => execute('withdraw_credit', [toGenWei(amount)]);
 
-  const phaseMessage: Partial<Record<TransactionPhase['status'], string>> = {
-    submitting: 'Confirm this action in your wallet.',
-    submitted: 'Submitted to Studionet. Waiting for validator decision.',
-    decided: 'Accepted by validators. Waiting for finalization.',
-    finalized: 'Finalized. Canonical contract state has been refreshed.',
-    failed: transaction.message || 'The transaction failed.',
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row font-sans">
       <Sidebar
@@ -278,7 +282,7 @@ export default function App() {
                 <LoaderCircle className="w-4 h-4 mt-0.5 shrink-0 animate-spin" />
               )}
               <div className="flex-1">
-                <p>{appError || phaseMessage[transaction.status]}</p>
+                <p>{appError || transactionPhaseMessage(transaction)}</p>
                 {transaction.hash && (
                   <a
                     className="font-semibold underline mt-1 inline-block"
